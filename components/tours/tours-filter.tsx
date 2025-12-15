@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,14 +35,30 @@ export function ToursFilter({
   onSortChange,
   onReset,
 }: ToursFilterProps) {
+  const [localSearch, setLocalSearch] = useState(search);
+
+  // Sync local search with prop when reset is triggered
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearchChange(localSearch);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [localSearch, onSearchChange]);
+
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="relative flex-1 md:max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search tours..."
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
           className="pl-8"
         />
       </div>
