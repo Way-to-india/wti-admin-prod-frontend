@@ -83,7 +83,6 @@ export const authService = {
       apiClient.setAccessToken(response.payload.accessToken);
       apiClient.setRefreshToken(response.payload.refreshToken);
 
-      // Store admin info (only in browser)
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin', JSON.stringify(response.payload.admin));
       }
