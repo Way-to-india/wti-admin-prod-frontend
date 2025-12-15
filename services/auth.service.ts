@@ -83,8 +83,10 @@ export const authService = {
       apiClient.setAccessToken(response.payload.accessToken);
       apiClient.setRefreshToken(response.payload.refreshToken);
 
-      // Store admin info
-      localStorage.setItem('admin', JSON.stringify(response.payload.admin));
+      // Store admin info (only in browser)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin', JSON.stringify(response.payload.admin));
+      }
 
       return response.payload;
     }
@@ -100,7 +102,9 @@ export const authService = {
     } finally {
       // Clear everything regardless of API call success
       apiClient.clearTokens();
-      localStorage.removeItem('admin');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin');
+      }
     }
   },
 
@@ -108,8 +112,10 @@ export const authService = {
     const response = await apiClient.get<AdminProfile>('/admin/auth/profile');
 
     if (response.status && response.payload) {
-      // Update stored admin info
-      localStorage.setItem('admin', JSON.stringify(response.payload));
+      // Update stored admin info (only in browser)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin', JSON.stringify(response.payload));
+      }
       return response.payload;
     }
 
@@ -117,6 +123,11 @@ export const authService = {
   },
 
   getStoredAdmin(): AdminProfile | null {
+    // SSR guard
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
     const adminStr = localStorage.getItem('admin');
     if (adminStr) {
       try {
@@ -129,10 +140,20 @@ export const authService = {
   },
 
   isAuthenticated(): boolean {
+    // SSR guard
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     return !!localStorage.getItem('accessToken');
   },
 
   hasPermission(moduleName: string, action: 'view' | 'create' | 'edit' | 'delete'): boolean {
+    // SSR guard
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     const admin = this.getStoredAdmin();
     if (!admin) return false;
 

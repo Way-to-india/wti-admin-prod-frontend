@@ -67,6 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     moduleName: string,
     action: 'view' | 'create' | 'edit' | 'delete'
   ): boolean => {
+    if (typeof window === 'undefined') {
+      return false; 
+    }
     return authService.hasPermission(moduleName, action);
   };
 
