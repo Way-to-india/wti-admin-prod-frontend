@@ -22,11 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-        <body className={`${roboto.className} antialiased`}>
-          <Provider>{children}</Provider>
-        </body>
-      </ThemeProvider>
+      <body className={`${roboto.className} antialiased`}>
+        <Provider>{children}</Provider>
+      </body>
     </html>
   );
 }

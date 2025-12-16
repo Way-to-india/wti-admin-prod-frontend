@@ -2,10 +2,10 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = any> {  
   status: boolean;
   message?: string;
-  payload?: T;
+  payload?: T;    
 } 
 class ApiClient {
   private client: AxiosInstance;

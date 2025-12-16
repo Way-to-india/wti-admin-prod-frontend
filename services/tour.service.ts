@@ -66,6 +66,37 @@ export interface Tour {
   itinerary?: TourItinerary[];
 }
 
+export interface CreateTourData {
+  title: string;
+  slug: string;
+  metatitle?: string;
+  metadesc?: string;
+  overview?: string;
+  description?: string;
+  durationDays: number;
+  durationNights: number;
+  price: number;
+  discountPrice?: number;
+  currency: string;
+  minGroupSize: number;
+  maxGroupSize: number;
+  bestTime?: string;
+  idealFor?: string;
+  difficulty?: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  cancellationPolicy?: string;
+  travelTips?: string;
+  startCityId?: string;
+  highlights?: string[];
+  inclusions?: string[];
+  exclusions?: string[];
+  images?: string[];
+  itinerary?: TourItinerary[];
+  themes?: string[];
+  cities?: string[];
+}
+
 export interface UpdateTourData {
   title?: string;
   slug?: string;
@@ -155,6 +186,16 @@ export const tourService = {
     }
 
     throw new Error(response.message || 'Failed to fetch tour');
+  },
+
+  async createTour(data: CreateTourData): Promise<Tour> {
+    const response = await apiClient.post<Tour>('/admin/tours/create', data);
+
+    if (response.status && response.payload) {
+      return response.payload;
+    }
+
+    throw new Error(response.message || 'Failed to create tour');
   },
 
   async updateTour(id: string, data: UpdateTourData): Promise<Tour> {

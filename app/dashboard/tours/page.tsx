@@ -85,33 +85,38 @@ export default function ToursPage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="view">
       <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Tours</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your tour packages ({total} total)
-            </p>
+        <div className="sticky top-0 z-50 bg-background border-b px-4 py-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Tours</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your tour packages ({total} total)
+              </p>
+            </div>
+            {canCreate && (
+              <Button
+                onClick={() => router.push('/dashboard/tours/create')}
+                className="w-fit cursor-pointer"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Tour
+              </Button>
+            )}
           </div>
-          {canCreate && (
-            <Button onClick={() => router.push('/tours/create')} className="w-fit">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Tour
-            </Button>
-          )}
-        </div>
 
-        {/* Filters */}
-        <ToursFilter
-          search={search}
-          isActive={isActive}
-          isFeatured={isFeatured}
-          sortBy={sortBy}
-          onSearchChange={setSearch}
-          onActiveChange={setIsActive}
-          onFeaturedChange={setIsFeatured}
-          onSortChange={setSortBy}
-          onReset={handleReset}
-        />
+          {/* Filters */}
+          <ToursFilter
+            search={search}
+            isActive={isActive}
+            isFeatured={isFeatured}
+            sortBy={sortBy}
+            onSearchChange={setSearch}
+            onActiveChange={setIsActive}
+            onFeaturedChange={setIsFeatured}
+            onSortChange={setSortBy}
+            onReset={handleReset}
+          />
+        </div>
 
         {/* Content */}
         {isLoading ? (

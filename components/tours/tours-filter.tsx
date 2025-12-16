@@ -52,7 +52,7 @@ export function ToursFilter({
   }, [localSearch, onSearchChange]);
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mt-2">
       <div className="relative flex-1 md:max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
