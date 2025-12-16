@@ -3,20 +3,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useState, useEffect } from 'react';
-import { X, Loader2, Globe, MapPin, Tag } from 'lucide-react';
-
-interface Theme {
-  id: string;
-  name: string;
-}
-
-interface City {
-  id: string;
-  name: string;
-}
+import { X, Loader2, Globe, MapPin, Tag, AlertCircle } from 'lucide-react';
+import { themeService, Theme } from '@/services/theme.service';
+import { cityService, City } from '@/services/city.service';
 
 interface SettingsTabProps {
   isActive: boolean;
@@ -51,6 +43,8 @@ export function SettingsTab({
   const [allCities, setAllCities] = useState<City[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
   const [isLoadingCities, setIsLoadingCities] = useState(true);
+  const [themesError, setThemesError] = useState<string | null>(null);
+  const [citiesError, setCitiesError] = useState<string | null>(null);
   const [themeSearch, setThemeSearch] = useState('');
   const [citySearch, setCitySearch] = useState('');
 
@@ -61,11 +55,13 @@ export function SettingsTab({
 
   const fetchThemes = async () => {
     try {
-      const response = await fetch('/api/themes');
-      const data = await response.json();
-      setAllThemes(data.themes || []);
+      setIsLoadingThemes(true);
+      setThemesError(null);
+      const response = await themeService.getAllThemes({ limit: 1000 });
+      setAllThemes(response.themes || []);
     } catch (error) {
       console.error('Error fetching themes:', error);
+      setThemesError(error instanceof Error ? error.message : 'Failed to load themes');
     } finally {
       setIsLoadingThemes(false);
     }
@@ -73,11 +69,13 @@ export function SettingsTab({
 
   const fetchCities = async () => {
     try {
-      const response = await fetch('/api/cities');
-      const data = await response.json();
-      setAllCities(data.cities || []);
+      setIsLoadingCities(true);
+      setCitiesError(null);
+      const response = await cityService.getAllCities({ limit: 1000 });
+      setAllCities(response.cities || []);
     } catch (error) {
       console.error('Error fetching cities:', error);
+      setCitiesError(error instanceof Error ? error.message : 'Failed to load cities');
     } finally {
       setIsLoadingCities(false);
     }
@@ -116,17 +114,21 @@ export function SettingsTab({
           <CardDescription>Control the visibility and featured status</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="isActive">Active Status</Label>
+              <Label htmlFor="isActive" className="text-base">
+                Active Status
+              </Label>
               <p className="text-sm text-muted-foreground">Make this tour visible to customers</p>
             </div>
             <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="isFeatured">Featured Tour</Label>
+              <Label htmlFor="isFeatured" className="text-base">
+                Featured Tour
+              </Label>
               <p className="text-sm text-muted-foreground">Show this tour in featured section</p>
             </div>
             <Switch id="isFeatured" checked={isFeatured} onCheckedChange={setIsFeatured} />
@@ -150,10 +152,16 @@ export function SettingsTab({
               id="metatitle"
               value={metatitle}
               onChange={(e) => setMetatitle(e.target.value)}
-              placeholder="Enter SEO title..."
+              placeholder="Enter SEO title (defaults to tour title if empty)..."
               maxLength={60}
             />
-            <p className="text-sm text-muted-foreground">{metatitle.length}/60 characters</p>
+            <p className="text-sm text-muted-foreground">
+              {metatitle.length}/60 characters
+              {metatitle.length > 50 && metatitle.length <= 60 && (
+                <span className="text-orange-600"> (near limit)</span>
+              )}
+              {metatitle.length === 60 && <span className="text-red-600"> (at limit)</span>}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -162,11 +170,17 @@ export function SettingsTab({
               id="metadesc"
               value={metadesc}
               onChange={(e) => setMetadesc(e.target.value)}
-              placeholder="Enter SEO description..."
+              placeholder="Enter SEO description (defaults to tour overview if empty)..."
               rows={4}
               maxLength={160}
             />
-            <p className="text-sm text-muted-foreground">{metadesc.length}/160 characters</p>
+            <p className="text-sm text-muted-foreground">
+              {metadesc.length}/160 characters
+              {metadesc.length > 140 && metadesc.length <= 160 && (
+                <span className="text-orange-600"> (near limit)</span>
+              )}
+              {metadesc.length === 160 && <span className="text-red-600"> (at limit)</span>}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -182,7 +196,7 @@ export function SettingsTab({
         </CardHeader>
         <CardContent className="space-y-4">
           {themes.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 rounded-lg border p-3 bg-muted/50">
               {themes.map((themeId) => {
                 const theme = allThemes.find((t) => t.id === themeId);
                 return theme ? (
@@ -201,35 +215,62 @@ export function SettingsTab({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Input
-              placeholder="Search themes..."
-              value={themeSearch}
-              onChange={(e) => setThemeSearch(e.target.value)}
-            />
-            {isLoadingThemes ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-            ) : (
-              <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3">
-                {filteredThemes.map((theme) => (
-                  <div key={theme.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id={`theme-${theme.id}`}
-                      checked={themes.includes(theme.id)}
-                      onChange={() => toggleTheme(theme.id)}
-                      className="h-4 w-4"
-                    />
-                    <Label htmlFor={`theme-${theme.id}`} className="cursor-pointer">
-                      {theme.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {themesError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {themesError}
+                <button onClick={fetchThemes} className="ml-2 underline hover:no-underline">
+                  Try again
+                </button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-2">
+              <Input
+                placeholder="Search themes..."
+                value={themeSearch}
+                onChange={(e) => setThemeSearch(e.target.value)}
+              />
+              {isLoadingThemes ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredThemes.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {themeSearch ? 'No themes found matching your search' : 'No themes available'}
+                </div>
+              ) : (
+                <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border p-3">
+                  {filteredThemes.map((theme) => (
+                    <div
+                      key={theme.id}
+                      className="flex items-center gap-2 hover:bg-muted/50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`theme-${theme.id}`}
+                        checked={themes.includes(theme.id)}
+                        onChange={() => toggleTheme(theme.id)}
+                        className="h-4 w-4 cursor-pointer"
+                      />
+                      <Label htmlFor={`theme-${theme.id}`} className="cursor-pointer flex-1">
+                        {theme.name}
+                        {theme.label && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({theme.label})
+                          </span>
+                        )}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {themes.length} theme{themes.length !== 1 ? 's' : ''} selected
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -244,7 +285,7 @@ export function SettingsTab({
         </CardHeader>
         <CardContent className="space-y-4">
           {cities.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 rounded-lg border p-3 bg-muted/50">
               {cities.map((cityId) => {
                 const city = allCities.find((c) => c.id === cityId);
                 return city ? (
@@ -263,35 +304,57 @@ export function SettingsTab({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Input
-              placeholder="Search cities..."
-              value={citySearch}
-              onChange={(e) => setCitySearch(e.target.value)}
-            />
-            {isLoadingCities ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-            ) : (
-              <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3">
-                {filteredCities.map((city) => (
-                  <div key={city.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id={`city-${city.id}`}
-                      checked={cities.includes(city.id)}
-                      onChange={() => toggleCity(city.id)}
-                      className="h-4 w-4"
-                    />
-                    <Label htmlFor={`city-${city.id}`} className="cursor-pointer">
-                      {city.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {citiesError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {citiesError}
+                <button onClick={fetchCities} className="ml-2 underline hover:no-underline">
+                  Try again
+                </button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-2">
+              <Input
+                placeholder="Search cities..."
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+              />
+              {isLoadingCities ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredCities.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {citySearch ? 'No cities found matching your search' : 'No cities available'}
+                </div>
+              ) : (
+                <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border p-3">
+                  {filteredCities.map((city) => (
+                    <div
+                      key={city.id}
+                      className="flex items-center gap-2 hover:bg-muted/50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`city-${city.id}`}
+                        checked={cities.includes(city.id)}
+                        onChange={() => toggleCity(city.id)}
+                        className="h-4 w-4 cursor-pointer"
+                      />
+                      <Label htmlFor={`city-${city.id}`} className="cursor-pointer flex-1">
+                        {city.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {cities.length} {cities.length !== 1 ? 'cities' : 'city'} selected
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

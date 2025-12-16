@@ -9,12 +9,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-
-interface City {
-  id: string;
-  name: string;
-}
+import { Loader2, AlertCircle } from 'lucide-react';
+import { cityService, City } from '@/services/city.service';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BasicInfoTabProps {
   title: string;
@@ -43,6 +40,7 @@ export function BasicInfoTab({
 }: BasicInfoTabProps) {
   const [cities, setCities] = useState<City[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(true);
+  const [citiesError, setCitiesError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCities();
@@ -50,12 +48,13 @@ export function BasicInfoTab({
 
   const fetchCities = async () => {
     try {
-      // Replace with your actual API call
-      const response = await fetch('/api/cities');
-      const data = await response.json();
-      setCities(data.cities || []);
+      setIsLoadingCities(true);
+      setCitiesError(null);
+      const response = await cityService.getAllCities({ limit: 1000 });
+      setCities(response.cities || []);
     } catch (error) {
       console.error('Error fetching cities:', error);
+      setCitiesError(error instanceof Error ? error.message : 'Failed to load cities');
     } finally {
       setIsLoadingCities(false);
     }
@@ -70,6 +69,7 @@ export function BasicInfoTab({
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
+    // Auto-generate slug only if slug is empty
     if (!slug) {
       setSlug(generateSlug(value));
     }
@@ -113,8 +113,9 @@ export function BasicInfoTab({
               required
             />
             <p className="text-sm text-muted-foreground">
-              URL-friendly version of the title (auto-generated)
+              URL-friendly version of the title (auto-generated from title)
             </p>
+            {slug && <p className="text-xs text-blue-600">Preview: /tours/{slug}</p>}
           </div>
 
           {/* Duration */}
@@ -127,10 +128,12 @@ export function BasicInfoTab({
                 id="durationDays"
                 type="number"
                 min="1"
+                max="365"
                 value={durationDays}
                 onChange={(e) => setDurationDays(parseInt(e.target.value) || 1)}
                 required
               />
+              <p className="text-sm text-muted-foreground">Number of days for the tour</p>
             </div>
 
             <div className="space-y-2">
@@ -141,38 +144,70 @@ export function BasicInfoTab({
                 id="durationNights"
                 type="number"
                 min="0"
+                max="364"
                 value={durationNights}
                 onChange={(e) => setDurationNights(parseInt(e.target.value) || 0)}
                 required
               />
+              <p className="text-sm text-muted-foreground">Number of nights for the tour</p>
             </div>
           </div>
+
+          {durationDays > 0 && (
+            <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
+              📅 Tour Duration:{' '}
+              <strong>
+                {durationDays} Days / {durationNights} Nights
+              </strong>
+            </div>
+          )}
 
           {/* Start City */}
           <div className="space-y-2">
             <Label htmlFor="startCity">
               Starting City <span className="text-red-500">*</span>
             </Label>
-            {isLoadingCities ? (
+            {citiesError ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {citiesError}
+                  <button onClick={fetchCities} className="ml-2 underline hover:no-underline">
+                    Try again
+                  </button>
+                </AlertDescription>
+              </Alert>
+            ) : isLoadingCities ? (
               <div className="flex items-center gap-2 rounded-md border p-3">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm text-muted-foreground">Loading cities...</span>
               </div>
+            ) : cities.length === 0 ? (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No cities available. Please add cities first or contact support.
+                </AlertDescription>
+              </Alert>
             ) : (
-              <Select value={startCityId} onValueChange={setStartCityId} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select starting city" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cities.map((city) => (
-                    <SelectItem key={city.id} value={city.id}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <Select value={startCityId} onValueChange={setStartCityId} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select starting city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map((city) => (
+                      <SelectItem key={city.id} value={city.id}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  Where does this tour begin? ({cities.length} cities available)
+                </p>
+              </>
             )}
-            <p className="text-sm text-muted-foreground">Where does this tour begin?</p>
           </div>
         </CardContent>
       </Card>

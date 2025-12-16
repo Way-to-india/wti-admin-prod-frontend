@@ -1,12 +1,13 @@
 import { apiClient } from '@/lib/api-client';
 
 export interface TourItinerary {
-  id: string;
-  tourId: string;
+  id?: string;
+  tourId?: string;
   day: number;
   title: string;
   description: string;
-  imageUrl: string | null;
+  imageUrl?: string;
+  image?: File; // For file upload
 }
 
 export interface Tour {
@@ -91,7 +92,8 @@ export interface CreateTourData {
   highlights?: string[];
   inclusions?: string[];
   exclusions?: string[];
-  images?: string[];
+  images?: File[];
+  coverImage?: File;
   itinerary?: TourItinerary[];
   themes?: string[];
   cities?: string[];
@@ -153,7 +155,6 @@ export const tourService = {
   async getAllTours(filters: TourFilters = {}): Promise<ToursResponse> {
     const params = new URLSearchParams();
 
-    // Add filters to params
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
@@ -189,7 +190,80 @@ export const tourService = {
   },
 
   async createTour(data: CreateTourData): Promise<Tour> {
-    const response = await apiClient.post<Tour>('/admin/tours/create', data);
+    const formData = new FormData();
+
+    // Add basic fields
+    formData.append('title', data.title);
+    formData.append('slug', data.slug);
+    formData.append('durationDays', data.durationDays.toString());
+    formData.append('durationNights', data.durationNights.toString());
+    formData.append('price', data.price.toString());
+    formData.append('currency', data.currency);
+    formData.append('minGroupSize', data.minGroupSize.toString());
+    formData.append('maxGroupSize', data.maxGroupSize.toString());
+    formData.append('isActive', data.isActive.toString());
+    formData.append('isFeatured', data.isFeatured.toString());
+
+    // Add optional fields
+    if (data.metatitle) formData.append('metatitle', data.metatitle);
+    if (data.metadesc) formData.append('metadesc', data.metadesc);
+    if (data.overview) formData.append('overview', data.overview);
+    if (data.description) formData.append('description', data.description);
+    if (data.discountPrice) formData.append('discountPrice', data.discountPrice.toString());
+    if (data.bestTime) formData.append('bestTime', data.bestTime);
+    if (data.idealFor) formData.append('idealFor', data.idealFor);
+    if (data.difficulty) formData.append('difficulty', data.difficulty);
+    if (data.cancellationPolicy) formData.append('cancellationPolicy', data.cancellationPolicy);
+    if (data.travelTips) formData.append('travelTips', data.travelTips);
+    if (data.startCityId) formData.append('startCityId', data.startCityId);
+
+    // Add arrays
+    if (data.highlights && data.highlights.length > 0) {
+      formData.append('highlights', JSON.stringify(data.highlights));
+    }
+    if (data.inclusions && data.inclusions.length > 0) {
+      formData.append('inclusions', JSON.stringify(data.inclusions));
+    }
+    if (data.exclusions && data.exclusions.length > 0) {
+      formData.append('exclusions', JSON.stringify(data.exclusions));
+    }
+    if (data.themes && data.themes.length > 0) {
+      formData.append('themes', JSON.stringify(data.themes));
+    }
+    if (data.cities && data.cities.length > 0) {
+      formData.append('cities', JSON.stringify(data.cities));
+    }
+
+    // Add itinerary
+    if (data.itinerary && data.itinerary.length > 0) {
+      const itineraryData = data.itinerary.map(({ image, ...rest }) => rest);
+      formData.append('itinerary', JSON.stringify(itineraryData));
+
+      // Add itinerary images
+      data.itinerary.forEach((day) => {
+        if (day.image) {
+          formData.append('itineraryImages', day.image);
+        }
+      });
+    }
+
+    // Add cover image
+    if (data.coverImage) {
+      formData.append('coverImage', data.coverImage);
+    }
+
+    // Add regular images
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((image) => {
+        formData.append('images', image);
+      });
+    }
+
+    const response = await apiClient.post<Tour>('/admin/tours/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
 
     if (response.status && response.payload) {
       return response.payload;
