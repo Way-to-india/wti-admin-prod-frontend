@@ -69,7 +69,6 @@ export function BasicInfoTab({
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    // Auto-generate slug only if slug is empty
     if (!slug) {
       setSlug(generateSlug(value));
     }
@@ -108,7 +107,7 @@ export function BasicInfoTab({
             <Input
               id="slug"
               value={slug}
-              onChange={(e) => setSlug(generateSlug(e.target.value))}
+              onChange={(e) => setSlug(e.target.value)}
               placeholder="12-jyotirlinga-tour-package"
               required
             />

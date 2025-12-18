@@ -7,7 +7,7 @@ export interface TourItinerary {
   title: string;
   description: string;
   imageUrl?: string;
-  image?: File; // For file upload
+  image?: File;
 }
 
 export interface Tour {
@@ -124,6 +124,13 @@ export interface UpdateTourData {
   highlights?: string[];
   inclusions?: string[];
   exclusions?: string[];
+  images?: string[];
+  newImages?: File[];
+  itinerary?: TourItinerary[];
+  themes?: string[];
+  cities?: string[];
+  faqs?: any[];
+  priceGuide?: any[];
 }
 
 export interface ToursResponse {
@@ -192,7 +199,6 @@ export const tourService = {
   async createTour(data: CreateTourData): Promise<Tour> {
     const formData = new FormData();
 
-    // Add basic fields
     formData.append('title', data.title);
     formData.append('slug', data.slug);
     formData.append('durationDays', data.durationDays.toString());
@@ -204,7 +210,6 @@ export const tourService = {
     formData.append('isActive', data.isActive.toString());
     formData.append('isFeatured', data.isFeatured.toString());
 
-    // Add optional fields
     if (data.metatitle) formData.append('metatitle', data.metatitle);
     if (data.metadesc) formData.append('metadesc', data.metadesc);
     if (data.overview) formData.append('overview', data.overview);
@@ -217,7 +222,6 @@ export const tourService = {
     if (data.travelTips) formData.append('travelTips', data.travelTips);
     if (data.startCityId) formData.append('startCityId', data.startCityId);
 
-    // Add arrays
     if (data.highlights && data.highlights.length > 0) {
       formData.append('highlights', JSON.stringify(data.highlights));
     }
@@ -234,12 +238,10 @@ export const tourService = {
       formData.append('cities', JSON.stringify(data.cities));
     }
 
-    // Add itinerary
     if (data.itinerary && data.itinerary.length > 0) {
       const itineraryData = data.itinerary.map(({ image, ...rest }) => rest);
       formData.append('itinerary', JSON.stringify(itineraryData));
 
-      // Add itinerary images
       data.itinerary.forEach((day) => {
         if (day.image) {
           formData.append('itineraryImages', day.image);
@@ -247,12 +249,10 @@ export const tourService = {
       });
     }
 
-    // Add cover image
     if (data.coverImage) {
       formData.append('coverImage', data.coverImage);
     }
 
-    // Add regular images
     if (data.images && data.images.length > 0) {
       data.images.forEach((image) => {
         formData.append('images', image);
@@ -273,7 +273,83 @@ export const tourService = {
   },
 
   async updateTour(id: string, data: UpdateTourData): Promise<Tour> {
-    const response = await apiClient.put<Tour>(`/admin/tours/edit/${id}`, data);
+    const formData = new FormData();
+
+    if (data.title !== undefined) formData.append('title', data.title);
+    if (data.slug !== undefined) formData.append('slug', data.slug);
+    if (data.metatitle !== undefined) formData.append('metatitle', data.metatitle);
+    if (data.metadesc !== undefined) formData.append('metadesc', data.metadesc);
+    if (data.overview !== undefined) formData.append('overview', data.overview);
+    if (data.description !== undefined) formData.append('description', data.description);
+    if (data.currency !== undefined) formData.append('currency', data.currency);
+    if (data.bestTime !== undefined) formData.append('bestTime', data.bestTime);
+    if (data.idealFor !== undefined) formData.append('idealFor', data.idealFor);
+    if (data.difficulty !== undefined) formData.append('difficulty', data.difficulty);
+    if (data.cancellationPolicy !== undefined)
+      formData.append('cancellationPolicy', data.cancellationPolicy);
+    if (data.travelTips !== undefined) formData.append('travelTips', data.travelTips);
+
+    if (data.durationDays !== undefined)
+      formData.append('durationDays', data.durationDays.toString());
+    if (data.durationNights !== undefined)
+      formData.append('durationNights', data.durationNights.toString());
+    if (data.price !== undefined) formData.append('price', data.price.toString());
+    if (data.discountPrice !== undefined)
+      formData.append('discountPrice', data.discountPrice.toString());
+    if (data.minGroupSize !== undefined)
+      formData.append('minGroupSize', data.minGroupSize.toString());
+    if (data.maxGroupSize !== undefined)
+      formData.append('maxGroupSize', data.maxGroupSize.toString());
+
+    if (data.isActive !== undefined) formData.append('isActive', data.isActive.toString());
+    if (data.isFeatured !== undefined) formData.append('isFeatured', data.isFeatured.toString());
+
+    if (data.startCityId !== undefined) formData.append('startCityId', data.startCityId || '');
+
+    if (data.images !== undefined) {
+      formData.append('images', JSON.stringify(data.images));
+    }
+    if (data.highlights !== undefined) {
+      formData.append('highlights', JSON.stringify(data.highlights));
+    }
+    if (data.inclusions !== undefined) {
+      formData.append('inclusions', JSON.stringify(data.inclusions));
+    }
+    if (data.exclusions !== undefined) {
+      formData.append('exclusions', JSON.stringify(data.exclusions));
+    }
+
+    if (data.themes !== undefined) {
+      formData.append('themes', JSON.stringify(data.themes));
+    }
+    if (data.cities !== undefined) {
+      formData.append('cities', JSON.stringify(data.cities));
+    }
+    if (data.faqs !== undefined) {
+      formData.append('faqs', JSON.stringify(data.faqs));
+    }
+    if (data.priceGuide !== undefined) {
+      formData.append('priceGuide', JSON.stringify(data.priceGuide));
+    }
+
+    if (data.itinerary !== undefined) {
+      const itineraryData = data.itinerary.map(({ image, ...rest }) => rest);
+      formData.append('itinerary', JSON.stringify(itineraryData));
+
+      data.itinerary.forEach((day) => {
+        if (day.image) {
+          formData.append('itineraryImages', day.image);
+        }
+      });
+    }
+
+    if (data.newImages && data.newImages.length > 0) {
+      data.newImages.forEach((image) => {
+        formData.append('images', image);
+      });
+    }
+
+    const response = await apiClient.put<Tour>(`/admin/tours/edit/${id}`, formData);
 
     if (response.status && response.payload) {
       return response.payload;

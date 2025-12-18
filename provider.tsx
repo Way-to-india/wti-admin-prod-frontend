@@ -7,7 +7,7 @@ import { ThemeProvider } from './components/theme-provider';
 const Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <AuthProvider>{children}</AuthProvider>;
+      <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>
   );
 };

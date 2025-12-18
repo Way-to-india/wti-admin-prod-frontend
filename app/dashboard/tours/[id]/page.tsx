@@ -83,21 +83,22 @@ export default function TourViewPage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="view">
       <div className="min-h-screen">
         <div className="mx-auto max-w-7xl p-4 md:p-6">
-          {/* Header */}
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Button variant="ghost" onClick={() => router.back()} className="w-fit">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
             {canEdit && (
-              <Button onClick={() => router.push(`/dashboard/tours/${tour.id}/edit`)}>
+              <Button
+                className="cursor-pointer"
+                onClick={() => router.push(`/dashboard/tours/${tour.id}/edit`)}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Tour
               </Button>
             )}
           </div>
 
-          {/* Title Section */}
           <Card className="mb-6">
             <CardContent className="pt-6">
               <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
@@ -120,7 +121,6 @@ export default function TourViewPage() {
                 </div>
               </div>
 
-              {/* Stats Grid */}
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <div className="flex items-center gap-2 rounded-lg p-3">
                   <Calendar className="h-4 w-4 text-blue-600" />
@@ -177,7 +177,6 @@ export default function TourViewPage() {
             </CardContent>
           </Card>
 
-          {/* Images Gallery */}
           {tour.images && tour.images.length > 0 && (
             <Card className="mb-6">
               <CardHeader>
@@ -203,7 +202,6 @@ export default function TourViewPage() {
             </Card>
           )}
 
-          {/* Main Tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-2 lg:grid-cols-6">
               <TabsTrigger className="cursor-pointer" value="overview">
@@ -231,7 +229,6 @@ export default function TourViewPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-4 cursor-pointer">
               {tour.overview && (
                 <Card>
@@ -283,7 +280,6 @@ export default function TourViewPage() {
               )}
             </TabsContent>
 
-            {/* Details Tab */}
             <TabsContent value="details" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -387,7 +383,6 @@ export default function TourViewPage() {
               )}
             </TabsContent>
 
-            {/* Itinerary Tab */}
             <TabsContent value="itinerary">
               <Card>
                 <CardHeader>
@@ -433,7 +428,6 @@ export default function TourViewPage() {
               </Card>
             </TabsContent>
 
-            {/* Inclusions Tab */}
             <TabsContent value="inclusions" className="space-y-4">
               {tour.inclusions && tour.inclusions.length > 0 && (
                 <Card>
@@ -484,7 +478,6 @@ export default function TourViewPage() {
               )}
             </TabsContent>
 
-            {/* SEO Tab */}
             <TabsContent value="seo">
               <Card>
                 <CardHeader>
@@ -520,7 +513,6 @@ export default function TourViewPage() {
               </Card>
             </TabsContent>
 
-            {/* Locations Tab */}
             <TabsContent value="locations" className="space-y-4">
               {tour.themes && tour.themes.length > 0 && (
                 <Card>

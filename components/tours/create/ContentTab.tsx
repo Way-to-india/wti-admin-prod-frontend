@@ -86,7 +86,7 @@ export function ContentTab({
               <CardTitle>Tour Highlights</CardTitle>
               <CardDescription>Add key highlights and attractions of this tour</CardDescription>
             </div>
-            <Button type="button" onClick={addHighlight} size="sm">
+            <Button className='cursor-pointer' type="button" onClick={addHighlight} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               Add Highlight
             </Button>
@@ -116,7 +116,7 @@ export function ContentTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeHighlight(index)}
-                    className="text-red-500 hover:bg-red-50 hover:text-red-700"
+                    className="cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

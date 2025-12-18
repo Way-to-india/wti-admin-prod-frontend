@@ -21,19 +21,16 @@ export default function TourCreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
 
-  // Basic Info
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [startCityId, setStartCityId] = useState('');
   const [durationDays, setDurationDays] = useState(1);
   const [durationNights, setDurationNights] = useState(0);
 
-  // Content
   const [overview, setOverview] = useState('');
   const [description, setDescription] = useState('');
   const [highlights, setHighlights] = useState<string[]>([]);
 
-  // Itinerary
   const [itinerary, setItinerary] = useState<
     Array<{
       day: number;
@@ -44,11 +41,9 @@ export default function TourCreatePage() {
     }>
   >([]);
 
-  // Images
   const [images, setImages] = useState<File[]>([]);
   const [coverImage, setCoverImage] = useState<File | null>(null);
 
-  // Details
   const [bestTime, setBestTime] = useState('');
   const [idealFor, setIdealFor] = useState('');
   const [difficulty, setDifficulty] = useState('');
@@ -57,14 +52,12 @@ export default function TourCreatePage() {
   const [travelTips, setTravelTips] = useState('');
   const [cancellationPolicy, setCancellationPolicy] = useState('');
 
-  // Pricing
   const [price, setPrice] = useState(0);
   const [discountPrice, setDiscountPrice] = useState(0);
   const [currency, setCurrency] = useState('INR');
   const [minGroupSize, setMinGroupSize] = useState(1);
   const [maxGroupSize, setMaxGroupSize] = useState(50);
 
-  // Settings
   const [isActive, setIsActive] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
   const [metatitle, setMetatitle] = useState('');
@@ -75,19 +68,16 @@ export default function TourCreatePage() {
   const validateForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    // Basic Info validation
     if (!title.trim()) errors.push('Tour title is required');
     if (!slug.trim()) errors.push('URL slug is required');
     if (!startCityId) errors.push('Starting city is required');
     if (durationDays < 1) errors.push('Duration must be at least 1 day');
 
-    // Content validation
     if (!overview.trim()) errors.push('Tour overview is required');
     if (!description.trim()) errors.push('Tour description is required');
     if (highlights.length === 0) errors.push('Add at least one highlight');
     if (highlights.some((h) => !h.trim())) errors.push('All highlights must have content');
 
-    // Itinerary validation
     if (itinerary.length === 0) {
       errors.push('Add at least one day to the itinerary');
     } else {
@@ -97,10 +87,8 @@ export default function TourCreatePage() {
       });
     }
 
-    // Images validation
     if (!coverImage) errors.push('Cover image is required');
 
-    // Pricing validation
     if (price <= 0) errors.push('Price must be greater than 0');
     if (discountPrice > 0 && discountPrice >= price) {
       errors.push('Discount price must be less than regular price');
@@ -119,7 +107,6 @@ export default function TourCreatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
     const validation = validateForm();
     if (!validation.isValid) {
       toast.error('Please fix the following errors:', {
@@ -182,7 +169,6 @@ export default function TourCreatePage() {
         icon: <CheckCircle2 className="h-5 w-5" />,
       });
 
-      // Wait a bit before redirecting to show the success message
       setTimeout(() => {
         router.push('/dashboard/tours');
       }, 1500);
@@ -232,10 +218,10 @@ export default function TourCreatePage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="create">
       <div className="min-h-screen">
         <div className="mx-auto max-w-7xl p-4 md:p-6">
-          <div className="sticky top-0 z-50 border-b shadow-sm p-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-lg">
+          <div className="sticky top-0 bg-background z-50 border-b shadow-sm p-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <Button variant="ghost" onClick={() => router.back()} className="h-9 w-9 p-0">
+                <Button variant="ghost" onClick={() => router.back()} className="cursor-pointer h-9 w-9 p-0">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
@@ -246,7 +232,7 @@ export default function TourCreatePage() {
                 </div>
               </div>
             </div>
-            <Button onClick={handleSubmit} disabled={isSubmitting} size="lg">
+            <Button className='cursor-pointer' onClick={handleSubmit} disabled={isSubmitting} size="lg">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -278,7 +264,7 @@ export default function TourCreatePage() {
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      className="cursor-pointer relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
                       {tab.label}
                       {status === 'complete' && (

@@ -134,9 +134,16 @@ export default function TourEditPage() {
 
     try {
       const cleanedData = { ...formData };
+
+      if (itinerary.length > 0) {
+        cleanedData.itinerary = itinerary;
+      }
+
       if (!cleanedData.startCityId || cleanedData.startCityId === '') {
         delete cleanedData.startCityId;
       }
+
+      console.log('🚀 Submitting tour data with itinerary:', cleanedData);
 
       await tourService.updateTour(params.id as string, cleanedData);
       toast.success('Tour updated successfully');
@@ -150,6 +157,12 @@ export default function TourEditPage() {
 
   const updateField = (field: keyof UpdateTourData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleItineraryChange = (newItinerary: ItineraryDay[]) => {
+    setItinerary(newItinerary);
+    setHasUnsavedChanges(true);
   };
 
   const handleTabChange = (value: string) => {
@@ -188,7 +201,7 @@ export default function TourEditPage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="edit">
       <div className="min-h-screen">
         <form onSubmit={handleSubmit} className="mx-auto max-w-7xl">
-          <div className="sticky top-0 z-50 border-b shadow-sm">
+          <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-4">
                 <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>
@@ -200,7 +213,7 @@ export default function TourEditPage() {
                   <p className="text-sm text-muted-foreground">{tour.title}</p>
                 </div>
               </div>
-              <Button type="submit" disabled={isSaving} size="lg">
+              <Button className='cursor-pointer' type="submit" disabled={isSaving} size="lg">
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -251,7 +264,8 @@ export default function TourEditPage() {
               </TabsContent>
 
               <TabsContent value="itinerary">
-                <ItineraryTab itinerary={itinerary} setItinerary={setItinerary} />
+                {/* 🔧 FIX 4: Use the new handler */}
+                <ItineraryTab itinerary={itinerary} setItinerary={handleItineraryChange} />
               </TabsContent>
 
               <TabsContent value="images">
