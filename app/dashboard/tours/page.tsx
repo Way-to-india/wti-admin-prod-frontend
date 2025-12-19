@@ -61,7 +61,6 @@ export default function ToursPage() {
     fetchTours();
   }, [currentPage, search, isActive, isFeatured, sortBy]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [search, isActive, isFeatured, sortBy]);
@@ -84,7 +83,6 @@ export default function ToursPage() {
   return (
     <ProtectedRoute requiredModule="Tours" requiredAction="view">
       <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
-        {/* Header */}
         <div className="sticky top-0 z-50 bg-background border-b px-4 py-3">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -104,7 +102,6 @@ export default function ToursPage() {
             )}
           </div>
 
-          {/* Filters */}
           <ToursFilter
             search={search}
             isActive={isActive}
@@ -118,7 +115,6 @@ export default function ToursPage() {
           />
         </div>
 
-        {/* Content */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -134,7 +130,6 @@ export default function ToursPage() {
           <div className="space-y-4">
             <ToursTable tours={tours} onDelete={handleDelete} onUpdate={fetchTours} />
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">

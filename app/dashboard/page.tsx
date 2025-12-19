@@ -72,7 +72,7 @@ export default function Dashboard() {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold">Failed to load dashboard</p>
-          <Button className="mt-4" onClick={fetchDashboard}>
+          <Button className="mt-4 cursor-pointer" onClick={fetchDashboard}>
             <IconReload className="mr-2 h-4 w-4" />
             Retry
           </Button>

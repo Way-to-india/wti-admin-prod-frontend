@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
-import { Roboto } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
+import { Montserrat } from 'next/font/google';
 import './globals.css';
 import Provider from '@/provider';
 
-const roboto = Roboto({
+const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['400', '500', '700'],
-  variable: '--font-roboto',
+  variable: '--font-montserrat',
 });
 
 export const metadata: Metadata = {
@@ -22,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${roboto.className} antialiased`}>
+      <body className={`${montserrat.className} antialiased`}>
         <Provider>{children}</Provider>
       </body>
     </html>
