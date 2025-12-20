@@ -200,7 +200,7 @@ export default function TourEditPage() {
           <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-4">
-                <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>
+                <Button className="cursor-pointer" type="button" variant="ghost" size="sm" onClick={() => router.back()}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
