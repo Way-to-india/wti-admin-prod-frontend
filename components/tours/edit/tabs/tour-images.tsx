@@ -14,7 +14,7 @@ interface TourImagesProps {
   onImagesChange: (images: string[], newFiles: File[]) => void;
 }
 
-export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) {
+export function TourImages({ images, onImagesChange }: TourImagesProps) {
   const [existingImages, setExistingImages] = useState<string[]>(images);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
@@ -32,12 +32,13 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
     const previews: string[] = [];
 
     fileArray.forEach((file) => {
-
+      // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} is not an image file`);
         return;
       }
 
+      // Validate file size (10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} exceeds 10MB size limit`);
         return;
@@ -54,6 +55,7 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
       setNewImageFiles(updatedFiles);
       setNewImagePreviews(updatedPreviews);
 
+      // Notify parent with current existing images and new files
       onImagesChange(existingImages, updatedFiles);
 
       toast.success(`${validFiles.length} image(s) added`);
@@ -66,13 +68,17 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
     const updatedImages = existingImages.filter((_, i) => i !== index);
     setExistingImages(updatedImages);
 
+    // IMPORTANT: Notify parent with UPDATED existing images array
     onImagesChange(updatedImages, newImageFiles);
+
+    console.log('🗑️ Removed existing image at index:', index);
+    console.log('📊 Updated existing images:', updatedImages);
 
     toast.info('Image removed (will be deleted on save)');
   };
 
   const removeNewImage = (index: number) => {
-    
+    // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(newImagePreviews[index]);
 
     const updatedFiles = newImageFiles.filter((_, i) => i !== index);
@@ -81,8 +87,11 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
     setNewImageFiles(updatedFiles);
     setNewImagePreviews(updatedPreviews);
 
-    // Notify parent component
+    // Notify parent with current existing images and updated new files
     onImagesChange(existingImages, updatedFiles);
+
+    console.log('🗑️ Removed new image at index:', index);
+    console.log('📊 Updated new files count:', updatedFiles.length);
 
     toast.info('New image removed');
   };
@@ -100,7 +109,6 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Upload Section */}
         <div>
           <Label htmlFor="file-upload">Upload New Images</Label>
           <div className="mt-2">
@@ -127,17 +135,17 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
           </div>
         </div>
 
-        {/* Images Display */}
         {totalImages === 0 ? (
           <div className="rounded-lg border-2 border-dashed py-12 text-center">
             <p className="text-muted-foreground">No images added yet</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Existing Images */}
             {existingImages.length > 0 && (
               <div>
-                <h3 className="mb-3 text-sm font-medium">Current Images</h3>
+                <h3 className="mb-3 text-sm font-medium">
+                  Current Images ({existingImages.length})
+                </h3>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {existingImages.map((img, idx) => (
                     <div
@@ -167,11 +175,10 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
               </div>
             )}
 
-            {/* New Images (Not Yet Saved) */}
             {newImagePreviews.length > 0 && (
               <div>
                 <h3 className="mb-3 text-sm font-medium text-orange-600 dark:text-orange-400">
-                  New Images (Not Saved Yet)
+                  New Images - Not Saved Yet ({newImagePreviews.length})
                 </h3>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {newImagePreviews.map((preview, idx) => (
@@ -202,7 +209,6 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
           </div>
         )}
 
-        {/* Info Message */}
         {newImagePreviews.length > 0 && (
           <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950">
             <p className="text-sm text-orange-800 dark:text-orange-200">

@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Plus, Trash2 } from 'lucide-react';
-import { ItineraryDay } from '@/helpers/UpdatTour';
+import { ItineraryDay } from '@/types/tour.types';
+
 
 interface ItineraryTabProps {
   itinerary: ItineraryDay[];

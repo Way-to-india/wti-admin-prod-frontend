@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { tourService } from '@/services/tour.service';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
-import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { toast } from 'sonner';
 import { BasicInfoTab } from '@/components/tours/edit/tabs/basic-info-tab';
 import { ContentTab } from '@/components/tours/edit/tabs/content-tab';
 import { ItineraryTab } from '@/components/tours/edit/tabs/itinerary-tab';
@@ -19,10 +19,10 @@ import { TABS } from '@/constants/UpdatTourTabs';
 import { Tour, UpdateTourData } from '@/types/tour.types';
 import {
   getInitialFormData,
-  ItineraryDay,
   mapItinerary,
   mapTourToFormData,
 } from '@/helpers/UpdatTour';
+import { ItineraryDay } from '@/types/tour.types';
 
 export default function TourEditPage() {
   const params = useParams();
@@ -32,6 +32,10 @@ export default function TourEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [currentTab, setCurrentTab] = useState('basic');
+
+  const [originalFormData, setOriginalFormData] = useState<UpdateTourData>(getInitialFormData());
+  const [originalItinerary, setOriginalItinerary] = useState<ItineraryDay[]>([]);
+  const [originalImages, setOriginalImages] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<UpdateTourData>(getInitialFormData());
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
@@ -49,9 +53,18 @@ export default function TourEditPage() {
       const data = await tourService.getTourById(id, true);
 
       setTour(data);
-      setFormData(mapTourToFormData(data));
-      setItinerary(mapItinerary(data.itinerary || []));
-      setImages(data.images || []);
+
+      const mappedFormData = mapTourToFormData(data);
+      const mappedItinerary = mapItinerary(data.itinerary || []);
+      const mappedImages = data.images || [];
+
+      setOriginalFormData(mappedFormData);
+      setOriginalItinerary(mappedItinerary);
+      setOriginalImages(mappedImages);
+
+      setFormData(mappedFormData);
+      setItinerary(mappedItinerary);
+      setImages(mappedImages);
     } catch (error) {
       toast.error((error as Error).message || 'Failed to load tour');
     } finally {
@@ -64,7 +77,13 @@ export default function TourEditPage() {
     setIsSaving(true);
 
     try {
-      const formDataToSend = buildFormData();
+      const formDataToSend = buildOptimizedFormData();
+
+      const changedFields: string[] = [];
+      for (const [key] of formDataToSend.entries()) {
+        if (!changedFields.includes(key)) changedFields.push(key);
+      }
+      console.log('📤 Sending only changed fields:', changedFields);
 
       await tourService.updateTour(params.id as string, formDataToSend);
 
@@ -79,25 +98,44 @@ export default function TourEditPage() {
     }
   };
 
-  const buildFormData = (): FormData => {
+  const buildOptimizedFormData = (): FormData => {
     const formDataToSend = new FormData();
+    let hasChanges = false;
 
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
+      const originalValue = originalFormData[key as keyof UpdateTourData];
+
+      const hasChanged = Array.isArray(value)
+        ? JSON.stringify(value) !== JSON.stringify(originalValue)
+        : value !== originalValue;
+
+      if (hasChanged && value !== undefined && value !== null) {
         const stringValue = Array.isArray(value) ? JSON.stringify(value) : String(value);
         formDataToSend.append(key, stringValue);
+        hasChanges = true;
       }
     });
 
-    if (itinerary.length > 0) {
+    const itineraryChanged = JSON.stringify(itinerary) !== JSON.stringify(originalItinerary);
+    if (itineraryChanged) {
+      console.log('📋 Itinerary changed, sending update');
       formDataToSend.append('itinerary', JSON.stringify(itinerary));
+      hasChanges = true;
     }
 
-    if (images.length > 0) {
+    const imagesChanged = JSON.stringify(images) !== JSON.stringify(originalImages);
+    const hasNewImages = newImageFiles.length > 0;
+
+    if (imagesChanged || hasNewImages) {
+      console.log('🖼️ Images changed:', { imagesChanged, hasNewImages });
       formDataToSend.append('images', JSON.stringify(images));
+      newImageFiles.forEach((file) => formDataToSend.append('images', file));
+      hasChanges = true;
     }
 
-    newImageFiles.forEach((file) => formDataToSend.append('images', file));
+    if (!hasChanges) {
+      toast.info('No changes detected');
+    }
 
     return formDataToSend;
   };
@@ -131,6 +169,7 @@ export default function TourEditPage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="edit">
       <div className="min-h-screen">
         <form onSubmit={handleSubmit} className="mx-auto max-w-7xl">
+          {/* Header */}
           <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-4">
@@ -166,6 +205,7 @@ export default function TourEditPage() {
             </div>
           </div>
 
+          {/* Tabs */}
           <div className="p-6">
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
               <TabsList className="mb-6">

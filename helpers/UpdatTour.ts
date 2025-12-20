@@ -1,14 +1,4 @@
-import { Tour, UpdateTourData } from '@/types/tour.types';
-
-
-export interface ItineraryDay {
-  id? : number;
-  day: number;
-  title: string;
-  description: string;
-  imageUrl?: string;
-  image?: File;
-}
+import { ItineraryDay, Tour, UpdateTourData } from '@/types/tour.types';
 
 export function getInitialFormData(): UpdateTourData {
   return {

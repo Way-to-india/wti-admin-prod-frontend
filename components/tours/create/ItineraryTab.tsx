@@ -6,7 +6,8 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
-import { ItineraryDay } from '@/helpers/UpdatTour';
+import { ItineraryDay } from '@/types/tour.types';
+
 
 interface ItineraryTabProps {
   itinerary: ItineraryDay[];

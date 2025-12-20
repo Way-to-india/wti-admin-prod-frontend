@@ -74,7 +74,6 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     immediatelyRender: false,
   });
 
-  // Update editor content when prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content, false);

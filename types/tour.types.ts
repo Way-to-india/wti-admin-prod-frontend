@@ -1,4 +1,4 @@
-export interface TourItinerary {
+export interface ItineraryDay {
   id?: string;
   tourId?: string;
   day: number;
@@ -62,7 +62,7 @@ export interface Tour {
       slug: string;
     };
   }>;
-  itinerary?: TourItinerary[];
+  itinerary?: ItineraryDay[];
 }
 
 export interface CreateTourData {
@@ -92,7 +92,7 @@ export interface CreateTourData {
   exclusions?: string[];
   images?: File[];
   coverImage?: File;
-  itinerary?: TourItinerary[];
+  itinerary?: ItineraryDay[];
   themes?: string[];
   cities?: string[];
 }
@@ -122,7 +122,7 @@ export interface UpdateTourData {
   highlights?: string[];
   inclusions?: string[];
   exclusions?: string[];
-  itinerary?: TourItinerary[];
+  itinerary?: ItineraryDay[];
   themes?: string[];
   cities?: string[];
   faqs?: any[];
