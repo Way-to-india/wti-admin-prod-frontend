@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { tourService, Tour } from '@/services/tour.service';
+import { tourService } from '@/services/tour.service';
 import { Button } from '@/components/ui/button';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/contexts/auth-context';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, Loader2 } from 'lucide-react';
 import { TourHeader } from '@/components/tours/view/tour-header';
 import { TourStats } from '@/components/tours/view/tour-stats';
 import { TourImages } from '@/components/tours/view/tour-images';
 import { TourTabs } from '@/components/tours/view/tour-tabs';
+import { Tour } from '@/types/tour.types';
 
 export default function TourViewPage() {
   const params = useParams();
@@ -36,7 +37,15 @@ export default function TourViewPage() {
     }
   };
 
-  if (!tour) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-30">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isLoading && !tour) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
@@ -55,13 +64,12 @@ export default function TourViewPage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="view">
       <div className="min-h-screen">
         <div className="mx-auto max-w-7xl p-4 md:p-6">
-          {/* Navigation */}
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Button variant="ghost" onClick={() => router.back()} className="cursor-pointer w-fit">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            {canEdit && (
+            {canEdit && tour && (
               <Button
                 className="cursor-pointer"
                 onClick={() => router.push(`/dashboard/tours/${tour.id}/edit`)}
@@ -72,17 +80,13 @@ export default function TourViewPage() {
             )}
           </div>
 
-          {/* Tour Header */}
           <TourHeader tour={tour} />
 
-          {/* Tour Stats */}
           <TourStats tour={tour} />
 
-          {/* Tour Images */}
           <TourImages tour={tour} />
 
-          {/* Tour Tabs */}
-          <TourTabs tour={tour} />
+          {tour && <TourTabs tour={tour} />}
         </div>
       </div>
     </ProtectedRoute>

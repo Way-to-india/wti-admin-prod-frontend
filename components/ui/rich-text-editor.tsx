@@ -22,6 +22,7 @@ import {
   AlignRight,
   Code,
 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface RichTextEditorProps {
   content: string;
@@ -29,12 +30,22 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
           levels: [2, 3, 4],
+        },
+        paragraph: {
+          HTMLAttributes: {
+            class: 'min-h-[1.5em] mb-4',
+          },
+        },
+        // Don't drop empty nodes
+        dropcursor: {
+          color: '#DBEAFE',
+          width: 4,
         },
       }),
       Link.configure({
@@ -50,15 +61,25 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      // Get HTML with preserved empty paragraphs
+      const html = editor.getHTML();
+      onChange(html);
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none min-h-[300px] p-4 focus:outline-none',
+        class:
+          'prose prose-sm max-w-none min-h-[300px] p-4 focus:outline-none [&_p:empty]:min-h-[1.5em] [&_p:empty]:mb-4',
       },
     },
     immediatelyRender: false,
   });
+
+  // Update editor content when prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content, false);
+    }
+  }, [content, editor]);
 
   if (!editor) return null;
 

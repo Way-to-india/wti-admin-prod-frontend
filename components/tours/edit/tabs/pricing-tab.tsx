@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UpdateTourData } from '@/services/tour.service';
+import { UpdateTourData } from '@/types/tour.types';
 
 interface TabProps {
   formData: UpdateTourData;

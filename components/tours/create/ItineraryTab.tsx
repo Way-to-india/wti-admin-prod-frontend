@@ -6,14 +6,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
-
-interface ItineraryDay {
-  day: number;
-  title: string;
-  description: string;
-  imageUrl?: string;
-  image?: File;
-}
+import { ItineraryDay } from '@/helpers/UpdatTour';
 
 interface ItineraryTabProps {
   itinerary: ItineraryDay[];

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DynamicListInput } from '@/components/ui/dynamic-list-input';
-import { UpdateTourData } from '@/services/tour.service';
+import { UpdateTourData } from '@/types/tour.types';
 
 interface TabProps {
   formData: UpdateTourData;

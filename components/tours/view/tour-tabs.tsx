@@ -1,4 +1,4 @@
-import { Tour } from '@/services/tour.service';
+import { Tour } from '@/types/tour.types';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './tabs/overview-tab';
@@ -6,6 +6,7 @@ import { DetailsTab } from './tabs/details-tab';
 import { ItineraryTab } from './tabs/itinerary-tab';
 import { InclusionsTab } from './tabs/inclusions-tab';
 import { SeoTab } from './tabs/seo-tab';
+
 import { LocationsTab } from './tabs/locations-tab';
 
 interface TourTabsProps {
@@ -31,7 +32,7 @@ export function TourTabs({ tour }: TourTabsProps) {
           )}
         </TabsTrigger>
         <TabsTrigger className="cursor-pointer" value="inclusions">
-          Inclusions
+          Inclusions / Exclusions
         </TabsTrigger>
         <TabsTrigger className="cursor-pointer" value="seo">
           SEO

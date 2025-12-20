@@ -32,13 +32,12 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
     const previews: string[] = [];
 
     fileArray.forEach((file) => {
-      // Validate file type
+
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} is not an image file`);
         return;
       }
 
-      // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} exceeds 10MB size limit`);
         return;
@@ -55,13 +54,11 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
       setNewImageFiles(updatedFiles);
       setNewImagePreviews(updatedPreviews);
 
-      // Notify parent component
       onImagesChange(existingImages, updatedFiles);
 
       toast.success(`${validFiles.length} image(s) added`);
     }
 
-    // Reset input
     e.target.value = '';
   };
 
@@ -69,14 +66,13 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
     const updatedImages = existingImages.filter((_, i) => i !== index);
     setExistingImages(updatedImages);
 
-    // Notify parent component
     onImagesChange(updatedImages, newImageFiles);
 
     toast.info('Image removed (will be deleted on save)');
   };
 
   const removeNewImage = (index: number) => {
-    // Revoke object URL to prevent memory leaks
+    
     URL.revokeObjectURL(newImagePreviews[index]);
 
     const updatedFiles = newImageFiles.filter((_, i) => i !== index);

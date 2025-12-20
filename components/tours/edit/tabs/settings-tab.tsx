@@ -9,7 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { UpdateTourData } from '@/services/tour.service';
+import { UpdateTourData } from '@/types/tour.types';
+
 
 
 interface TabProps {

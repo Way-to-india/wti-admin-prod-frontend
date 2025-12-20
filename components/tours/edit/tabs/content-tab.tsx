@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { UpdateTourData } from '@/services/tour.service';
+import { UpdateTourData } from '@/types/tour.types';
 
 interface ContentTabProps {
   formData: UpdateTourData;

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { tourService, Tour, UpdateTourData } from '@/services/tour.service';
+import { tourService } from '@/services/tour.service';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
-import { ProtectedRoute } from '@/components/auth/protected-route';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { BasicInfoTab } from '@/components/tours/edit/tabs/basic-info-tab';
 import { ContentTab } from '@/components/tours/edit/tabs/content-tab';
 import { ItineraryTab } from '@/components/tours/edit/tabs/itinerary-tab';
@@ -15,51 +15,28 @@ import { DetailsTab } from '@/components/tours/edit/tabs/details-tab';
 import { PricingTab } from '@/components/tours/edit/tabs/pricing-tab';
 import { SettingsTab } from '@/components/tours/edit/tabs/settings-tab';
 import { TourImages } from '@/components/tours/edit/tabs/tour-images';
-
-interface ItineraryDay {
-  day: number;
-  title: string;
-  description: string;
-  imageUrl?: string;
-}
+import { TABS } from '@/constants/UpdatTourTabs';
+import { Tour, UpdateTourData } from '@/types/tour.types';
+import {
+  getInitialFormData,
+  ItineraryDay,
+  mapItinerary,
+  mapTourToFormData,
+} from '@/helpers/UpdatTour';
 
 export default function TourEditPage() {
   const params = useParams();
   const router = useRouter();
+
   const [tour, setTour] = useState<Tour | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentTab, setCurrentTab] = useState('basic');
+
+  const [formData, setFormData] = useState<UpdateTourData>(getInitialFormData());
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [currentTab, setCurrentTab] = useState('basic');
-
-  const [formData, setFormData] = useState<UpdateTourData>({
-    title: '',
-    slug: '',
-    metatitle: '',
-    metadesc: '',
-    overview: '',
-    description: '',
-    durationDays: 0,
-    durationNights: 0,
-    price: 0,
-    discountPrice: 0,
-    currency: 'INR',
-    minGroupSize: 1,
-    maxGroupSize: 50,
-    bestTime: '',
-    idealFor: '',
-    difficulty: '',
-    isActive: true,
-    isFeatured: false,
-    cancellationPolicy: '',
-    travelTips: '',
-    startCityId: undefined,
-    highlights: [],
-    inclusions: [],
-    exclusions: [],
-  });
 
   useEffect(() => {
     if (params.id) {
@@ -70,45 +47,10 @@ export default function TourEditPage() {
   const fetchTour = async (id: string) => {
     try {
       const data = await tourService.getTourById(id, true);
+
       setTour(data);
-      setFormData({
-        title: data.title,
-        slug: data.slug,
-        metatitle: data.metatitle || '',
-        metadesc: data.metadesc || '',
-        overview: data.overview || '',
-        description: data.description || '',
-        durationDays: data.durationDays,
-        durationNights: data.durationNights,
-        price: data.price,
-        discountPrice: data.discountPrice || 0,
-        currency: data.currency,
-        minGroupSize: data.minGroupSize,
-        maxGroupSize: data.maxGroupSize,
-        bestTime: data.bestTime || '',
-        idealFor: data.idealFor || '',
-        difficulty: data.difficulty || '',
-        isActive: data.isActive,
-        isFeatured: data.isFeatured,
-        cancellationPolicy: data.cancellationPolicy || '',
-        travelTips: data.travelTips || '',
-        startCityId: data.startCityId || undefined,
-        highlights: data.highlights || [],
-        inclusions: data.inclusions || [],
-        exclusions: data.exclusions || [],
-      });
-
-      if (data.itinerary && data.itinerary.length > 0) {
-        setItinerary(
-          data.itinerary.map((item) => ({
-            day: item.day,
-            title: item.title,
-            description: item.description,
-            imageUrl: item.imageUrl || '',
-          }))
-        );
-      }
-
+      setFormData(mapTourToFormData(data));
+      setItinerary(mapItinerary(data.itinerary || []));
       setImages(data.images || []);
     } catch (error) {
       toast.error((error as Error).message || 'Failed to load tour');
@@ -122,42 +64,11 @@ export default function TourEditPage() {
     setIsSaving(true);
 
     try {
-      const formDataToSend = new FormData();
-
-      // Append basic form fields
-      Object.keys(formData).forEach((key) => {
-        const value = formData[key as keyof UpdateTourData];
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
-            formDataToSend.append(key, JSON.stringify(value));
-          } else {
-            formDataToSend.append(key, String(value));
-          }
-        }
-      });
-
-      // Append itinerary if exists
-      if (itinerary.length > 0) {
-        formDataToSend.append('itinerary', JSON.stringify(itinerary));
-      }
-
-      // Append existing images
-      if (images.length > 0) {
-        formDataToSend.append('images', JSON.stringify(images));
-      }
-
-      // Append new image files
-      newImageFiles.forEach((file) => {
-        formDataToSend.append('images', file);
-      });
-
-      console.log('🚀 Submitting tour update...');
+      const formDataToSend = buildFormData();
 
       await tourService.updateTour(params.id as string, formDataToSend);
 
       toast.success('Tour updated successfully');
-
-      // Clear new image files after successful save
       setNewImageFiles([]);
 
       router.push(`/dashboard/tours/${params.id}`);
@@ -166,6 +77,29 @@ export default function TourEditPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const buildFormData = (): FormData => {
+    const formDataToSend = new FormData();
+
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        const stringValue = Array.isArray(value) ? JSON.stringify(value) : String(value);
+        formDataToSend.append(key, stringValue);
+      }
+    });
+
+    if (itinerary.length > 0) {
+      formDataToSend.append('itinerary', JSON.stringify(itinerary));
+    }
+
+    if (images.length > 0) {
+      formDataToSend.append('images', JSON.stringify(images));
+    }
+
+    newImageFiles.forEach((file) => formDataToSend.append('images', file));
+
+    return formDataToSend;
   };
 
   const updateField = (field: keyof UpdateTourData, value: any) => {
@@ -200,7 +134,13 @@ export default function TourEditPage() {
           <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-4">
-                <Button className="cursor-pointer" type="button" variant="ghost" size="sm" onClick={() => router.back()}>
+                <Button
+                  className="cursor-pointer"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
@@ -209,6 +149,7 @@ export default function TourEditPage() {
                   <p className="text-sm text-muted-foreground">{tour.title}</p>
                 </div>
               </div>
+
               <Button className="cursor-pointer" type="submit" disabled={isSaving} size="lg">
                 {isSaving ? (
                   <>
@@ -228,27 +169,11 @@ export default function TourEditPage() {
           <div className="p-6">
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
               <TabsList className="mb-6">
-                <TabsTrigger className="cursor-pointer" value="basic">
-                  Basic Info
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="content">
-                  Content
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="itinerary">
-                  Itinerary
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="images">
-                  Images
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="details">
-                  Details
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="pricing">
-                  Pricing
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="settings">
-                  Settings
-                </TabsTrigger>
+                {TABS.map((tab) => (
+                  <TabsTrigger key={tab.value} className="cursor-pointer" value={tab.value}>
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               <TabsContent value="basic">

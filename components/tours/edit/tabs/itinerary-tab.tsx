@@ -4,13 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Plus, Trash2 } from 'lucide-react';
-
-interface ItineraryDay {
-  day: number;
-  title: string;
-  description: string;
-  imageUrl?: string;
-}
+import { ItineraryDay } from '@/helpers/UpdatTour';
 
 interface ItineraryTabProps {
   itinerary: ItineraryDay[];
