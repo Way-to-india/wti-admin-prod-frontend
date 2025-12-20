@@ -21,10 +21,10 @@ const Home = () => {
   }, [isAuthenticated, isLoading, router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        <p className="text-gray-600 text-lg">Loading...</p>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col justify-center items-center">
+        <Loader2 className="mr-2 h-10 w-10 animate-spin" />
+        <p>Loading...</p>
       </div>
     </div>
   );
