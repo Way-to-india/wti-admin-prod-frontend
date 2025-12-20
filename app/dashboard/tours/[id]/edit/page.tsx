@@ -15,16 +15,6 @@ import { DetailsTab } from '@/components/tours/edit/tabs/details-tab';
 import { PricingTab } from '@/components/tours/edit/tabs/pricing-tab';
 import { SettingsTab } from '@/components/tours/edit/tabs/settings-tab';
 import { TourImages } from '@/components/tours/edit/tabs/tour-images';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface ItineraryDay {
   day: number;
@@ -41,8 +31,7 @@ export default function TourEditPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
   const [images, setImages] = useState<string[]>([]);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [currentTab, setCurrentTab] = useState('basic');
 
   const [formData, setFormData] = useState<UpdateTourData>({
@@ -133,20 +122,44 @@ export default function TourEditPage() {
     setIsSaving(true);
 
     try {
-      const cleanedData = { ...formData };
+      const formDataToSend = new FormData();
 
+      // Append basic form fields
+      Object.keys(formData).forEach((key) => {
+        const value = formData[key as keyof UpdateTourData];
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            formDataToSend.append(key, JSON.stringify(value));
+          } else {
+            formDataToSend.append(key, String(value));
+          }
+        }
+      });
+
+      // Append itinerary if exists
       if (itinerary.length > 0) {
-        cleanedData.itinerary = itinerary;
+        formDataToSend.append('itinerary', JSON.stringify(itinerary));
       }
 
-      if (!cleanedData.startCityId || cleanedData.startCityId === '') {
-        delete cleanedData.startCityId;
+      // Append existing images
+      if (images.length > 0) {
+        formDataToSend.append('images', JSON.stringify(images));
       }
 
-      console.log('🚀 Submitting tour data with itinerary:', cleanedData);
+      // Append new image files
+      newImageFiles.forEach((file) => {
+        formDataToSend.append('images', file);
+      });
 
-      await tourService.updateTour(params.id as string, cleanedData);
+      console.log('🚀 Submitting tour update...');
+
+      await tourService.updateTour(params.id as string, formDataToSend);
+
       toast.success('Tour updated successfully');
+
+      // Clear new image files after successful save
+      setNewImageFiles([]);
+
       router.push(`/dashboard/tours/${params.id}`);
     } catch (error) {
       toast.error((error as Error).message || 'Failed to update tour');
@@ -157,32 +170,15 @@ export default function TourEditPage() {
 
   const updateField = (field: keyof UpdateTourData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    setHasUnsavedChanges(true);
   };
 
   const handleItineraryChange = (newItinerary: ItineraryDay[]) => {
     setItinerary(newItinerary);
-    setHasUnsavedChanges(true);
   };
 
-  const handleTabChange = (value: string) => {
-    if (hasUnsavedChanges) {
-      setPendingTab(value);
-    } else {
-      setCurrentTab(value);
-    }
-  };
-
-  const confirmTabChange = () => {
-    setHasUnsavedChanges(false);
-    if (pendingTab) {
-      setCurrentTab(pendingTab);
-      setPendingTab(null);
-    }
-  };
-
-  const cancelTabChange = () => {
-    setPendingTab(null);
+  const handleImagesChange = (newImages: string[], newFiles: File[]) => {
+    setImages(newImages);
+    setNewImageFiles(newFiles);
   };
 
   if (isLoading) {
@@ -213,7 +209,7 @@ export default function TourEditPage() {
                   <p className="text-sm text-muted-foreground">{tour.title}</p>
                 </div>
               </div>
-              <Button className='cursor-pointer' type="submit" disabled={isSaving} size="lg">
+              <Button className="cursor-pointer" type="submit" disabled={isSaving} size="lg">
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -230,7 +226,7 @@ export default function TourEditPage() {
           </div>
 
           <div className="p-6">
-            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
               <TabsList className="mb-6">
                 <TabsTrigger className="cursor-pointer" value="basic">
                   Basic Info
@@ -264,19 +260,11 @@ export default function TourEditPage() {
               </TabsContent>
 
               <TabsContent value="itinerary">
-                {/* 🔧 FIX 4: Use the new handler */}
                 <ItineraryTab itinerary={itinerary} setItinerary={handleItineraryChange} />
               </TabsContent>
 
               <TabsContent value="images">
-                <TourImages
-                  tourId={tour.id}
-                  images={images}
-                  onImagesChange={(newImages) => {
-                    setImages(newImages);
-                    setHasUnsavedChanges(false);
-                  }}
-                />
+                <TourImages tourId={tour.id} images={images} onImagesChange={handleImagesChange} />
               </TabsContent>
 
               <TabsContent value="details">
@@ -294,21 +282,6 @@ export default function TourEditPage() {
           </div>
         </form>
       </div>
-
-      <AlertDialog open={!!pendingTab} onOpenChange={() => setPendingTab(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. Do you want to discard them?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelTabChange}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmTabChange}>Discard</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </ProtectedRoute>
   );
 }

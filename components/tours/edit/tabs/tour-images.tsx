@@ -1,78 +1,97 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Trash2, Upload } from 'lucide-react';
+import { Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
 interface TourImagesProps {
   tourId: string;
   images: string[];
-  onImagesChange: (images: string[]) => void;
+  onImagesChange: (images: string[], newFiles: File[]) => void;
 }
 
 export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) {
-  const [localImages, setLocalImages] = useState<string[]>(images);
-  const [isUploading, setIsUploading] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>(images);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
 
-  const removeImage = (index: number) => {
-    setLocalImages(localImages.filter((_, i) => i !== index));
-    setHasChanges(true);
-  };
+  useEffect(() => {
+    setExistingImages(images);
+  }, [images]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
-    try {
-      // TODO: Replace with actual upload API
-      const uploadedUrls: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const formData = new FormData();
-        formData.append('file', files[i]);
-        formData.append('tourId', tourId);
+    const fileArray = Array.from(files);
+    const validFiles: File[] = [];
+    const previews: string[] = [];
 
-        // Simulated API call
-        const fakeUrl = URL.createObjectURL(files[i]);
-        uploadedUrls.push(fakeUrl);
+    fileArray.forEach((file) => {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image file`);
+        return;
       }
 
-      setLocalImages([...localImages, ...uploadedUrls]);
-      setHasChanges(true);
-      toast.success('Images uploaded successfully');
-    } catch (error) {
-      toast.error((error as Error).message || 'Failed to upload images');
-    } finally {
-      setIsUploading(false);
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds 10MB size limit`);
+        return;
+      }
+
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
+    });
+
+    if (validFiles.length > 0) {
+      const updatedFiles = [...newImageFiles, ...validFiles];
+      const updatedPreviews = [...newImagePreviews, ...previews];
+
+      setNewImageFiles(updatedFiles);
+      setNewImagePreviews(updatedPreviews);
+
+      // Notify parent component
+      onImagesChange(existingImages, updatedFiles);
+
+      toast.success(`${validFiles.length} image(s) added`);
     }
+
+    // Reset input
+    e.target.value = '';
   };
 
-  const saveChanges = async () => {
-    setIsUploading(true);
-    try {
-      // TODO: Replace with actual API call
-      // await apiClient.put(`/admin/tours/${tourId}/images`, { images: localImages });
+  const removeExistingImage = (index: number) => {
+    const updatedImages = existingImages.filter((_, i) => i !== index);
+    setExistingImages(updatedImages);
 
-      onImagesChange(localImages);
-      setHasChanges(false);
-      toast.success('Images saved successfully');
-    } catch (error) {
-      toast.error((error as Error).message || 'Failed to save images');
-    } finally {
-      setIsUploading(false);
-    }
+    // Notify parent component
+    onImagesChange(updatedImages, newImageFiles);
+
+    toast.info('Image removed (will be deleted on save)');
   };
 
-  const discardChanges = () => {
-    setLocalImages(images);
-    setHasChanges(false);
-    toast.info('Changes discarded');
+  const removeNewImage = (index: number) => {
+    // Revoke object URL to prevent memory leaks
+    URL.revokeObjectURL(newImagePreviews[index]);
+
+    const updatedFiles = newImageFiles.filter((_, i) => i !== index);
+    const updatedPreviews = newImagePreviews.filter((_, i) => i !== index);
+
+    setNewImageFiles(updatedFiles);
+    setNewImagePreviews(updatedPreviews);
+
+    // Notify parent component
+    onImagesChange(existingImages, updatedFiles);
+
+    toast.info('New image removed');
   };
+
+  const totalImages = existingImages.length + newImagePreviews.length;
 
   return (
     <Card>
@@ -80,74 +99,119 @@ export function TourImages({ tourId, images, onImagesChange }: TourImagesProps) 
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Tour Images</CardTitle>
-            <CardDescription>Upload and manage tour images</CardDescription>
+            <CardDescription>Upload and manage tour images ({totalImages} total)</CardDescription>
           </div>
-          {hasChanges && (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={discardChanges} disabled={isUploading}>
-                Discard
-              </Button>
-              <Button onClick={saveChanges} disabled={isUploading}>
-                Save Changes
-              </Button>
-            </div>
-          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Upload Section */}
         <div>
-          <Label htmlFor="file-upload">Upload Files</Label>
+          <Label htmlFor="file-upload">Upload New Images</Label>
           <div className="mt-2">
             <label
               htmlFor="file-upload"
-              className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed p-6 hover:bg-gray-700"
+              className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <div className="text-center">
                 <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                 <p className="mt-2 text-sm text-muted-foreground">
                   Click to upload or drag and drop
                 </p>
-                <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 10MB</p>
               </div>
               <input
                 id="file-upload"
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="hidden"
                 onChange={handleFileUpload}
-                disabled={isUploading}
               />
             </label>
           </div>
         </div>
 
-        {/* Images Grid */}
-        {localImages.length === 0 ? (
+        {/* Images Display */}
+        {totalImages === 0 ? (
           <div className="rounded-lg border-2 border-dashed py-12 text-center">
             <p className="text-muted-foreground">No images added yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {localImages.map((img, idx) => (
-              <div
-                key={idx}
-                className="group relative aspect-square overflow-hidden rounded-lg border"
-              >
-                <Image src={img} alt={`Image ${idx + 1}`} fill className="object-cover" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="absolute right-2 top-2"
-                    onClick={() => removeImage(idx)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div className="space-y-6">
+            {/* Existing Images */}
+            {existingImages.length > 0 && (
+              <div>
+                <h3 className="mb-3 text-sm font-medium">Current Images</h3>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {existingImages.map((img, idx) => (
+                    <div
+                      key={`existing-${idx}`}
+                      className="group relative aspect-square overflow-hidden rounded-lg border"
+                    >
+                      <Image src={img} alt={`Existing ${idx + 1}`} fill className="object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute right-2 top-2"
+                          onClick={() => removeExistingImage(idx)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {idx === 0 && (
+                        <div className="absolute left-2 top-2 rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
+                          Cover
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* New Images (Not Yet Saved) */}
+            {newImagePreviews.length > 0 && (
+              <div>
+                <h3 className="mb-3 text-sm font-medium text-orange-600 dark:text-orange-400">
+                  New Images (Not Saved Yet)
+                </h3>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {newImagePreviews.map((preview, idx) => (
+                    <div
+                      key={`new-${idx}`}
+                      className="group relative aspect-square overflow-hidden rounded-lg border-2 border-orange-300 dark:border-orange-700"
+                    >
+                      <Image src={preview} alt={`New ${idx + 1}`} fill className="object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute right-2 top-2"
+                          onClick={() => removeNewImage(idx)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="absolute left-2 top-2 rounded bg-orange-600 px-2 py-1 text-xs text-white">
+                        New
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Info Message */}
+        {newImagePreviews.length > 0 && (
+          <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950">
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              💡 New images will be uploaded when you click Save Changes button
+            </p>
           </div>
         )}
       </CardContent>
