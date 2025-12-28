@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import Image from '@tiptap/extension-image';
 import { Button } from './button';
 import {
   Bold,
@@ -21,6 +22,11 @@ import {
   AlignCenter,
   AlignRight,
   Code,
+  ImageIcon,
+  Heading1,
+  Heading3,
+  Strikethrough,
+  Minus,
 } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -28,21 +34,25 @@ interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
+  mode?: 'basic' | 'advanced'; // Add mode prop
 }
 
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export function RichTextEditor({
+  content,
+  onChange,
+  mode = 'basic', // Default to basic mode for backward compatibility
+}: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [2, 3, 4],
+          levels: mode === 'advanced' ? [1, 2, 3, 4] : [2, 3, 4],
         },
         paragraph: {
           HTMLAttributes: {
             class: 'min-h-[1.5em] mb-4',
           },
         },
-        // Don't drop empty nodes
         dropcursor: {
           color: '#DBEAFE',
           width: 4,
@@ -58,10 +68,21 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      // Only add Image extension in advanced mode
+      ...(mode === 'advanced'
+        ? [
+            Image.configure({
+              inline: true,
+              allowBase64: true,
+              HTMLAttributes: {
+                class: 'max-w-full h-auto rounded-lg my-4',
+              },
+            }),
+          ]
+        : []),
     ],
     content,
     onUpdate: ({ editor }) => {
-      // Get HTML with preserved empty paragraphs
       const html = editor.getHTML();
       onChange(html);
     },
@@ -96,6 +117,14 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
+  const addImage = () => {
+    const url = window.prompt('Enter image URL');
+
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
   };
 
   return (
@@ -134,10 +163,34 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           >
             <UnderlineIcon className="h-4 w-4" />
           </Button>
+          {mode === 'advanced' && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              className={editor.isActive('strike') ? 'bg-gray-500' : ''}
+              title="Strikethrough"
+            >
+              <Strikethrough className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Headings */}
         <div className="flex items-center gap-1 border-r pr-2">
+          {mode === 'advanced' && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+              className={editor.isActive('heading', { level: 1 }) ? 'bg-gray-500' : ''}
+              title="Heading 1"
+            >
+              <Heading1 className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -148,6 +201,18 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           >
             <Heading2 className="h-4 w-4" />
           </Button>
+          {mode === 'advanced' && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              className={editor.isActive('heading', { level: 3 }) ? 'bg-gray-500' : ''}
+              title="Heading 3"
+            >
+              <Heading3 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Lists */}
@@ -230,10 +295,21 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           >
             <Code className="h-4 w-4" />
           </Button>
+          {mode === 'advanced' && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              title="Horizontal Line"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Link */}
-        <div className="flex items-center gap-1 border-r pr-2">
+        <div className={`flex items-center gap-1 ${mode === 'advanced' ? 'border-r' : ''} pr-2`}>
           <Button
             type="button"
             variant="ghost"
@@ -245,6 +321,15 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
             <LinkIcon className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Image - Only in advanced mode */}
+        {mode === 'advanced' && (
+          <div className="flex items-center gap-1 border-r pr-2">
+            <Button type="button" variant="ghost" size="sm" onClick={addImage} title="Add Image">
+              <ImageIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Undo/Redo */}
         <div className="flex items-center gap-1">

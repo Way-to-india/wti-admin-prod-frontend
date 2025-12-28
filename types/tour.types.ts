@@ -1,3 +1,20 @@
+export interface FaqQuestion {
+  id?: string;
+  faqId?: string;
+  question: string;
+  answer: string;
+  order: number;
+}
+
+export interface Faq {
+  id?: string;
+  tourId?: string;
+  isActive: boolean;
+  questions: FaqQuestion[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ItineraryDay {
   id?: string;
   tourId?: string;
@@ -63,6 +80,7 @@ export interface Tour {
     };
   }>;
   itinerary?: ItineraryDay[];
+  faqs?: Faq[];
 }
 
 export interface CreateTourData {
@@ -95,6 +113,7 @@ export interface CreateTourData {
   itinerary?: ItineraryDay[];
   themes?: string[];
   cities?: string[];
+  faqs?: Array<{ question: string; answer: string; order: number }>;
 }
 
 export interface UpdateTourData {

@@ -1,28 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { tourService } from '@/services/tour.service';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { toast } from 'sonner';
 import { BasicInfoTab } from '@/components/tours/edit/tabs/basic-info-tab';
 import { ContentTab } from '@/components/tours/edit/tabs/content-tab';
-import { ItineraryTab } from '@/components/tours/edit/tabs/itinerary-tab';
 import { DetailsTab } from '@/components/tours/edit/tabs/details-tab';
+import { FaqTab } from '@/components/tours/edit/tabs/faq-tab';
+import { ItineraryTab } from '@/components/tours/edit/tabs/itinerary-tab';
 import { PricingTab } from '@/components/tours/edit/tabs/pricing-tab';
 import { SettingsTab } from '@/components/tours/edit/tabs/settings-tab';
 import { TourImages } from '@/components/tours/edit/tabs/tour-images';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TABS } from '@/constants/UpdatTourTabs';
-import { Tour, UpdateTourData } from '@/types/tour.types';
-import {
-  getInitialFormData,
-  mapItinerary,
-  mapTourToFormData,
-} from '@/helpers/UpdatTour';
-import { ItineraryDay } from '@/types/tour.types';
+import { getInitialFormData, mapFaqs, mapItinerary, mapTourToFormData } from '@/helpers/UpdatTour';
+import { tourService } from '@/services/tour.service';
+import { Faq, ItineraryDay, Tour, UpdateTourData } from '@/types/tour.types';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function TourEditPage() {
   const params = useParams();
@@ -36,11 +32,13 @@ export default function TourEditPage() {
   const [originalFormData, setOriginalFormData] = useState<UpdateTourData>(getInitialFormData());
   const [originalItinerary, setOriginalItinerary] = useState<ItineraryDay[]>([]);
   const [originalImages, setOriginalImages] = useState<string[]>([]);
+  const [originalFaqs, setOriginalFaqs] = useState<Faq[]>([]);
 
   const [formData, setFormData] = useState<UpdateTourData>(getInitialFormData());
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [faqs, setFaqs] = useState<Faq[]>([]);
 
   useEffect(() => {
     if (params.id) {
@@ -57,14 +55,17 @@ export default function TourEditPage() {
       const mappedFormData = mapTourToFormData(data);
       const mappedItinerary = mapItinerary(data.itinerary || []);
       const mappedImages = data.images || [];
+      const mappedFaqs = mapFaqs(data.faqs || []);
 
       setOriginalFormData(mappedFormData);
       setOriginalItinerary(mappedItinerary);
       setOriginalImages(mappedImages);
+      setOriginalFaqs(mappedFaqs);
 
       setFormData(mappedFormData);
       setItinerary(mappedItinerary);
       setImages(mappedImages);
+      setFaqs(mappedFaqs);
     } catch (error) {
       toast.error((error as Error).message || 'Failed to load tour');
     } finally {
@@ -133,6 +134,13 @@ export default function TourEditPage() {
       hasChanges = true;
     }
 
+    const faqsChanged = JSON.stringify(faqs) !== JSON.stringify(originalFaqs);
+    if (faqsChanged) {
+      console.log('❓ FAQs changed, sending update');
+      formDataToSend.append('faqs', JSON.stringify(faqs));
+      hasChanges = true;
+    }
+
     if (!hasChanges) {
       toast.info('No changes detected');
     }
@@ -151,6 +159,10 @@ export default function TourEditPage() {
   const handleImagesChange = (newImages: string[], newFiles: File[]) => {
     setImages(newImages);
     setNewImageFiles(newFiles);
+  };
+
+  const handleFaqsChange = (newFaqs: Faq[]) => {
+    setFaqs(newFaqs);
   };
 
   if (isLoading) {
@@ -242,6 +254,10 @@ export default function TourEditPage() {
 
               <TabsContent value="settings">
                 <SettingsTab formData={formData} updateField={updateField} />
+              </TabsContent>
+
+              <TabsContent value="faqs">
+                <FaqTab faqs={faqs} setFaqs={handleFaqsChange} />
               </TabsContent>
             </Tabs>
           </div>

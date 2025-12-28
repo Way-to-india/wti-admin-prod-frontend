@@ -1,19 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, Loader2, CheckCircle2 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { tourService } from '@/services/tour.service';
 import { BasicInfoTab } from '@/components/tours/create/BasicInfoTab';
 import { ContentTab } from '@/components/tours/create/ContentTab';
+import { DetailsTab } from '@/components/tours/create/DetailsTab';
+import { FaqTab } from '@/components/tours/create/FaqTab';
 import { ImagesTab } from '@/components/tours/create/ImagesTab';
 import { ItineraryTab } from '@/components/tours/create/ItineraryTab';
-import { DetailsTab } from '@/components/tours/create/DetailsTab';
 import { PricingTab } from '@/components/tours/create/PricingTab';
 import { SettingsTab } from '@/components/tours/create/SettingsTab';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { tourService } from '@/services/tour.service';
+import { ArrowLeft, CheckCircle2, Loader2, Save } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function TourCreatePage() {
@@ -64,6 +65,7 @@ export default function TourCreatePage() {
   const [metadesc, setMetadesc] = useState('');
   const [themes, setThemes] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
+  const [faqs, setFaqs] = useState<Array<{ question: string; answer: string; order: number }>>([]);
 
   const validateForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
@@ -88,6 +90,13 @@ export default function TourCreatePage() {
     }
 
     if (!coverImage) errors.push('Cover image is required');
+
+    if (faqs.length > 0) {
+      faqs.forEach((faq, index) => {
+        if (!faq.question.trim()) errors.push(`FAQ ${index + 1}: Question is required`);
+        if (!faq.answer.trim()) errors.push(`FAQ ${index + 1}: Answer is required`);
+      });
+    }
 
     if (price <= 0) errors.push('Price must be greater than 0');
     if (discountPrice > 0 && discountPrice >= price) {
@@ -160,6 +169,7 @@ export default function TourCreatePage() {
         metadesc: metadesc || overview,
         themes,
         cities,
+        faqs: faqs.filter((f) => f.question.trim() && f.answer.trim()),
       };
 
       await tourService.createTour(tourData);
@@ -204,6 +214,11 @@ export default function TourCreatePage() {
       case 'details':
         if (inclusions.length > 0 || exclusions.length > 0) return 'incomplete';
         return 'empty';
+      case 'faqs':
+        if (faqs.length > 0 && faqs.every((f) => f.question.trim() && f.answer.trim()))
+          return 'complete';
+        if (faqs.length > 0) return 'incomplete';
+        return 'empty';
       case 'pricing':
         if (price > 0) return 'complete';
         return 'empty';
@@ -221,7 +236,11 @@ export default function TourCreatePage() {
           <div className="sticky top-0 bg-background z-50 border-b shadow-sm p-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <Button variant="ghost" onClick={() => router.back()} className="cursor-pointer h-9 w-9 p-0">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="cursor-pointer h-9 w-9 p-0"
+                >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
@@ -232,7 +251,12 @@ export default function TourCreatePage() {
                 </div>
               </div>
             </div>
-            <Button className='cursor-pointer' onClick={handleSubmit} disabled={isSubmitting} size="lg">
+            <Button
+              className="cursor-pointer"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              size="lg"
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -249,13 +273,14 @@ export default function TourCreatePage() {
 
           <form onSubmit={handleSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="mb-6 grid w-full grid-cols-3 lg:grid-cols-7 p-1 h-auto">
+              <TabsList className="mb-6 grid w-full grid-cols-3 lg:grid-cols-8 p-1 h-auto">
                 {[
                   { value: 'basic', label: 'Basic Info' },
                   { value: 'content', label: 'Content' },
                   { value: 'itinerary', label: 'Itinerary' },
                   { value: 'images', label: 'Images' },
                   { value: 'details', label: 'Details' },
+                  { value: 'faqs', label: 'FAQs' },
                   { value: 'pricing', label: 'Pricing' },
                   { value: 'settings', label: 'Settings' },
                 ].map((tab) => {
@@ -331,6 +356,10 @@ export default function TourCreatePage() {
                   cancellationPolicy={cancellationPolicy}
                   setCancellationPolicy={setCancellationPolicy}
                 />
+              </TabsContent>
+
+              <TabsContent value="faqs">
+                <FaqTab faqs={faqs} setFaqs={setFaqs} />
               </TabsContent>
 
               <TabsContent value="pricing">

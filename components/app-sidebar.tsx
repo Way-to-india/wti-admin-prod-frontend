@@ -13,6 +13,12 @@ import {
   IconBuildingSkyscraper,
   IconCar,
   IconUsers,
+  IconInfoCircle,
+  IconPhone,
+  IconHelp,
+  IconBriefcase,
+  IconShield,
+  IconFileText,
 } from '@tabler/icons-react';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
@@ -98,17 +104,7 @@ const data = {
     {
       title: 'Users',
       url: '/dashboard/users',
-      icon: IconTicket,
-    },
-    {
-      title: 'Hotel Leads',
-      url: '/dashboard/leads/hotels',
-      icon: IconBuildingSkyscraper,
-    },
-    {
-      title: 'Transportation Leads',
-      url: '/dashboard/leads/transportation',
-      icon: IconCar,
+      icon: IconUsers,
     },
   ],
   navSecondary: [

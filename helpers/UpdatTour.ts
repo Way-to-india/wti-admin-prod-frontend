@@ -1,4 +1,4 @@
-import { ItineraryDay, Tour, UpdateTourData } from '@/types/tour.types';
+import { Faq, ItineraryDay, Tour, UpdateTourData } from '@/types/tour.types';
 
 export function getInitialFormData(): UpdateTourData {
   return {
@@ -64,5 +64,16 @@ export function mapItinerary(itinerary: any[]): ItineraryDay[] {
     title: item.title,
     description: item.description,
     imageUrl: item.imageUrl || '',
+  }));
+}
+
+export function mapFaqs(faqs: any[]): Faq[] {
+  if (!faqs || faqs.length === 0) return [];
+  return faqs.map((faq) => ({
+    id: faq.id,
+    isActive: faq.isActive ?? true,
+    questions: faq.questions || [],
+    createdAt: faq.createdAt,
+    updatedAt: faq.updatedAt,
   }));
 }

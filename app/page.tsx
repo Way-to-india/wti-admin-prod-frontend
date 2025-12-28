@@ -10,7 +10,6 @@ const Home = () => {
   const router = useRouter();
 
   useEffect(() => {
-    console.log(isLoading, isAuthenticated);
     if (!isLoading) {
       if (isAuthenticated) {
         router.push('/dashboard');
@@ -25,7 +24,7 @@ const Home = () => {
       <div className="flex flex-col justify-center items-center">
         <Loader2 className="mr-2 h-10 w-10 animate-spin" />
         <p>Loading...</p>
-      </div>
+      </div>  
     </div>
   );
 };

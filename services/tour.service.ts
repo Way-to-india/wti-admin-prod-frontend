@@ -27,7 +27,6 @@ export interface TourFilters {
 }
 
 export const tourService = {
-
   async getAllTours(filters: TourFilters = {}): Promise<ToursResponse> {
     const params = new URLSearchParams();
 
@@ -126,6 +125,10 @@ export const tourService = {
       data.images.forEach((image) => {
         formData.append('images', image);
       });
+    }
+
+    if (data.faqs && data.faqs.length > 0) {
+      formData.append('faqs', JSON.stringify(data.faqs));
     }
 
     const response = await apiClient.post<Tour>('/admin/tours/create', formData, {
