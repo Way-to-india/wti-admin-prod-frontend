@@ -15,6 +15,7 @@ import { TABS } from '@/constants/UpdatTourTabs';
 import { getInitialFormData, mapFaqs, mapItinerary, mapTourToFormData } from '@/helpers/UpdatTour';
 import { tourService } from '@/services/tour.service';
 import { Faq, ItineraryDay, Tour, UpdateTourData } from '@/types/tour.types';
+import { isAxiosError } from 'axios';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -67,7 +68,8 @@ export default function TourEditPage() {
       setImages(mappedImages);
       setFaqs(mappedFaqs);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to load tour');
+      if (isAxiosError(error))
+        toast.error(error.response?.data.message || 'Failed to load tour');
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +95,8 @@ export default function TourEditPage() {
 
       router.push(`/dashboard/tours/${params.id}`);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to update tour');
+      if (isAxiosError(error))
+        toast.error(error.response?.data.message || 'Failed to update tour');
     } finally {
       setIsSaving(false);
     }

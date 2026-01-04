@@ -52,6 +52,7 @@ import { DeleteAdminDialog } from '@/components/admins/delete-admin-dialog';
 import { SendRequestDialog } from '@/components/admins/send-request-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
+import { isAxiosError } from 'axios';
 
 export default function AdminsPage() {
   const { admin: currentAdmin, hasPermission } = useAuth();
@@ -97,7 +98,8 @@ export default function AdminsPage() {
       setAdmins(data.admins);
       setPagination(data.pagination);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to fetch admins');
+      if (isAxiosError(error))
+        toast.error(error.response?.data.message || 'Failed to fetch admins');
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +116,8 @@ export default function AdminsPage() {
       toast.success(`Admin ${admin.isActive ? 'deactivated' : 'activated'} successfully`);
       fetchAdmins();
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to update admin status');
+      if (isAxiosError(error))
+        toast.error(error.response?.data.message || 'Failed to update admin status');
     }
   };
 

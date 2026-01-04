@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { tourService, Tour, TourFilters } from '@/services/tour.service';
+import { tourService, TourFilters } from '@/services/tour.service';
 import { ToursTable } from '@/components/tours/tours-table';
 import { ToursFilter } from '@/components/tours/tours-filter';
 import { ToursPagination } from '@/components/tours/tour-pagination';
@@ -10,8 +10,10 @@ import { Plus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/contexts/auth-context';
+import { Tour } from '@/types/tour.types';
 
 export default function ToursPage() {
+  
   const router = useRouter();
   const { hasPermission } = useAuth();
   const [tours, setTours] = useState<Tour[]>([]);

@@ -3,7 +3,6 @@
 import * as React from 'react';
 import {
   IconBell,
-  IconChartBar,
   IconDashboard,
   IconSettings,
   IconMap2,
@@ -13,12 +12,6 @@ import {
   IconBuildingSkyscraper,
   IconCar,
   IconUsers,
-  IconInfoCircle,
-  IconPhone,
-  IconHelp,
-  IconBriefcase,
-  IconShield,
-  IconFileText,
 } from '@tabler/icons-react';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
@@ -59,12 +52,7 @@ const data = {
       title: 'Admins',
       url: '/dashboard/admins',
       icon: IconUsers,
-    },
-    {
-      title: 'Analytics',
-      url: '/dashboard/analytics',
-      icon: IconChartBar,
-    },
+    }
   ],
   navModules: [
     {

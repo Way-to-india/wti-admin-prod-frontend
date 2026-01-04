@@ -76,10 +76,7 @@ export interface AdminProfile {
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>('/admin/auth/login', credentials);
-
-    // Check for status instead of success, and payload instead of data
     if (response.status && response.payload) {
-      // Store tokens
       apiClient.setAccessToken(response.payload.accessToken);
       apiClient.setRefreshToken(response.payload.refreshToken);
 
@@ -99,7 +96,6 @@ export const authService = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear everything regardless of API call success
       apiClient.clearTokens();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('admin');
@@ -111,7 +107,6 @@ export const authService = {
     const response = await apiClient.get<AdminProfile>('/admin/auth/profile');
 
     if (response.status && response.payload) {
-      // Update stored admin info (only in browser)
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin', JSON.stringify(response.payload));
       }
@@ -122,11 +117,6 @@ export const authService = {
   },
 
   getStoredAdmin(): AdminProfile | null {
-    // SSR guard
-    if (typeof window === 'undefined') {
-      return null;
-    }
-
     const adminStr = localStorage.getItem('admin');
     if (adminStr) {
       try {
@@ -139,20 +129,10 @@ export const authService = {
   },
 
   isAuthenticated(): boolean {
-    // SSR guard
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
     return !!localStorage.getItem('accessToken');
   },
 
   hasPermission(moduleName: string, action: 'view' | 'create' | 'edit' | 'delete'): boolean {
-    // SSR guard
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
     const admin = this.getStoredAdmin();
     if (!admin) return false;
 

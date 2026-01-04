@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Tour } from '@/services/tour.service';
+import { isAxiosError } from 'axios';
 import {
   Table,
   TableBody,
@@ -35,6 +35,7 @@ import { useRouter } from 'next/navigation';
 import { tourService } from '@/services/tour.service';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { Tour } from '@/types/tour.types';
 
 interface ToursTableProps {
   tours: Tour[];
@@ -57,7 +58,7 @@ export function ToursTable({ tours, onDelete, onUpdate }: ToursTableProps) {
       onDelete(deleteId);
       setDeleteId(null);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to delete tour');
+      if (isAxiosError(error)) toast.error(error.response?.data.message || 'Failed to delete tour');
     } finally {
       setIsDeleting(false);
     }
@@ -69,7 +70,8 @@ export function ToursTable({ tours, onDelete, onUpdate }: ToursTableProps) {
       toast.success(`Tour ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
       onUpdate();
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to update tour status');
+      if (isAxiosError(error))
+        toast.error(error.response?.data.message || 'Failed to update tour status');
     }
   };
 

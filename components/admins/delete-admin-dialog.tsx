@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isAxiosError } from 'axios';
 
 interface DeleteAdminDialogProps {
   open: boolean;
@@ -39,7 +40,8 @@ export function DeleteAdminDialog({
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to delete admin');
+      if (isAxiosError(error))
+        toast.error(error.response?.data.message || 'Failed to delete admin');
     } finally {
       setIsDeleting(false);
     }

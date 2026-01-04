@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isAxiosError } from 'axios';
 
 interface EditAdminDialogProps {
   open: boolean;
@@ -70,7 +71,7 @@ export function EditAdminDialog({ open, onOpenChange, admin, onSuccess }: EditAd
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to update admin');
+      if (isAxiosError(error)) toast.error(error.response?.data.message || 'Failed to update admin');
     } finally {
       setIsSubmitting(false);
     }
