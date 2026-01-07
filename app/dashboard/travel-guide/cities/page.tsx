@@ -10,10 +10,9 @@ import { travelGuideService } from '@/services/travel-guide.service';
 import { CityFilters, TravelGuideCity, TravelGuideState } from '@/types/travel-guide.types';
 import { Loader2, Plus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
-export default function CitiesPage() {
-  
+function CitiesContent() {
   const searchParams = useSearchParams();
 
   const [cities, setCities] = useState<TravelGuideCity[]>([]);
@@ -79,6 +78,7 @@ export default function CitiesPage() {
     if (!isLoadingStates) {
       fetchCities();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, search, stateId, sortBy, isLoadingStates]);
 
   useEffect(() => {
@@ -112,75 +112,87 @@ export default function CitiesPage() {
   };
 
   return (
-    <ProtectedRoute requiredModule="Travel-Guide" requiredAction="view">
-      <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
-        <div className="sticky top-0 z-50 bg-background border-b px-4 py-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                Travel Guide - Cities
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage cities for the travel guide ({total} total)
-              </p>
-            </div>
-            <Button onClick={handleCreate} className="w-fit cursor-pointer">
-              <Plus className="mr-2 h-4 w-4" />
-              Create City
-            </Button>
+    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
+      <div className="sticky top-0 z-50 bg-background border-b px-4 py-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Travel Guide - Cities</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage cities for the travel guide ({total} total)
+            </p>
           </div>
-
-          <CitiesFilter
-            search={search}
-            stateId={stateId}
-            sortBy={sortBy}
-            states={states}
-            onSearchChange={setSearch}
-            onStateChange={setStateId}
-            onSortChange={setSortBy}
-            onReset={handleReset}
-          />
+          <Button onClick={handleCreate} className="w-fit cursor-pointer">
+            <Plus className="mr-2 h-4 w-4" />
+            Create City
+          </Button>
         </div>
 
-        {isLoading ? (
+        <CitiesFilter
+          search={search}
+          stateId={stateId}
+          sortBy={sortBy}
+          states={states}
+          onSearchChange={setSearch}
+          onStateChange={setStateId}
+          onSortChange={setSortBy}
+          onReset={handleReset}
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <p className="text-destructive">{error}</p>
+          <Button variant="outline" onClick={fetchCities} className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <CitiesTable cities={cities} onDelete={handleDelete} onEdit={handleEdit} />
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, total)} of{' '}
+                {total} results
+              </p>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <CityDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        city={selectedCity}
+        states={states}
+        onSuccess={handleDialogSuccess}
+      />
+    </div>
+  );
+}
+
+export default function CitiesPage() {
+  return (
+    <ProtectedRoute requiredModule="Travel-Guide" requiredAction="view">
+      <Suspense
+        fallback={
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <p className="text-destructive">{error}</p>
-            <Button variant="outline" onClick={fetchCities} className="mt-4">
-              Try Again
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <CitiesTable cities={cities} onDelete={handleDelete} onEdit={handleEdit} />
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, total)}{' '}
-                  of {total} results
-                </p>
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        <CityDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          city={selectedCity}
-          states={states}
-          onSuccess={handleDialogSuccess}
-        />
-      </div>
+        }
+      >
+        <CitiesContent />
+      </Suspense>
     </ProtectedRoute>
   );
 }
