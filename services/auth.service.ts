@@ -117,22 +117,31 @@ export const authService = {
   },
 
   getStoredAdmin(): AdminProfile | null {
-    const adminStr = localStorage.getItem('admin');
-    if (adminStr) {
-      try {
+    // Check if running on server
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const adminStr = localStorage.getItem('admin');
+      if (adminStr) {
         return JSON.parse(adminStr);
-      } catch {
-        return null;
       }
+      return null;
+    } catch {
+      return null;
     }
-    return null;
   },
 
   isAuthenticated(): boolean {
+    // Check if running on server
+    if (typeof window === 'undefined') return false;
+
     return !!localStorage.getItem('accessToken');
   },
 
   hasPermission(moduleName: string, action: 'view' | 'create' | 'edit' | 'delete'): boolean {
+    // Check if running on server
+    if (typeof window === 'undefined') return false;
+
     const admin = this.getStoredAdmin();
     if (!admin) return false;
 
