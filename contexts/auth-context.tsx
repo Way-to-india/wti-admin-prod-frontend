@@ -28,9 +28,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const storedAdmin = authService.getStoredAdmin();
           if (storedAdmin) {
             setAdmin(storedAdmin);
+          }
 
+          try {
             const profile = await authService.getProfile();
             setAdmin(profile);
+          } catch (error) {
+            console.error('Failed to fetch profile:', error);
           }
         }
       } catch (error) {
@@ -67,7 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     moduleName: string,
     action: 'view' | 'create' | 'edit' | 'delete'
   ): boolean => {
-    return authService.hasPermission(moduleName, action);
+    if (!admin) return false;
+
+    const permission = admin?.role?.permissions?.find((p) => p.module.name === moduleName);
+    return permission ? permission[action] : false;
   };
 
   return (
