@@ -12,6 +12,7 @@ import {
   IconBuildingSkyscraper,
   IconCar,
   IconUsers,
+  IconPhoto,
 } from '@tabler/icons-react';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
@@ -69,6 +70,11 @@ const data = {
       title: 'Destinations',
       icon: IconMapPin,
       url: '/dashboard/destinations',
+    },
+    {
+      title: 'Hero Slides',
+      icon: IconPhoto,
+      url: '/dashboard/hero-slides',
     },
   ],
   navLeads: [
