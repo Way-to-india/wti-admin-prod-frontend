@@ -135,12 +135,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup>
-            <SidebarGroupLabel>Leads</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <NavMain items={data.navLeads} />
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
             <SidebarGroupLabel>Users</SidebarGroupLabel>
             <SidebarGroupContent>
               <NavMain items={data.navUsers} />
