@@ -7,10 +7,10 @@ import { crmService } from '@/services/crm.service';
 import { Lead, LeadFilters } from '@/types/crm.types';
 import { Download, Plus } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-export default function LeadsPage() {
+function LeadsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -117,5 +117,20 @@ export default function LeadsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LeadsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="mt-4 text-muted-foreground">Loading leads...</p>
+        </div>
+      }
+    >
+      <LeadsClient />
+    </Suspense>
   );
 }
