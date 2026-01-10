@@ -4,7 +4,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
+import { 
   Sidebar,
   SidebarContent,
   SidebarFooter,
