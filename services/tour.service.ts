@@ -27,6 +27,7 @@ export interface TourFilters {
 }
 
 export const tourService = {
+  
   async getAllTours(filters: TourFilters = {}): Promise<ToursResponse> {
     const params = new URLSearchParams();
 

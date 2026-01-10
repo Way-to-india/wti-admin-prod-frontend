@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface DashboardData {
   overview: any;
@@ -58,11 +59,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <IconReload className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading dashboard...</p>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -83,7 +81,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-6 lg:p-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -107,7 +104,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger className="cursor-pointer" value="overview">
@@ -124,7 +120,6 @@ export default function Dashboard() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <DashboardStats data={data.overview} />
           <div className="grid gap-6 lg:grid-cols-7">
@@ -138,18 +133,15 @@ export default function Dashboard() {
           <TopPerformers data={data.topPerformers} />
         </TabsContent>
 
-        {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-6">
           <DashboardCharts data={data} showAll />
         </TabsContent>
 
-        {/* Tours Tab */}
         <TabsContent value="tours" className="space-y-6">
           <TopTours analytics={data.analytics} />
           <TopPerformers data={data.topPerformers} showAll />
         </TabsContent>
 
-        {/* Leads Tab */}
         <TabsContent value="leads" className="space-y-6">
           <RecentActivity data={data.recent} showLeadsOnly />
         </TabsContent>
