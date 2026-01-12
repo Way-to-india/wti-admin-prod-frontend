@@ -13,10 +13,14 @@ import {
   IconCar,
   IconUsers,
   IconPhoto,
+  IconApps,
+  IconLock,
+  IconShield,
 } from '@tabler/icons-react';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
   SidebarContent,
@@ -29,7 +33,6 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from '@/components/ui/sidebar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import Link from 'next/link';
 
 const data = {
@@ -101,6 +104,23 @@ const data = {
       icon: IconUsers,
     },
   ],
+  navSystem: [
+    {
+      title: 'Roles',
+      url: '/dashboard/roles',
+      icon: IconShield,
+    },
+    {
+      title: 'Modules',
+      url: '/dashboard/modules',
+      icon: IconApps,
+    },
+    {
+      title: 'Permissions',
+      url: '/dashboard/permissions',
+      icon: IconLock,
+    },
+  ],
   navSecondary: [
     {
       title: 'Settings',
@@ -138,6 +158,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupLabel>Users</SidebarGroupLabel>
             <SidebarGroupContent>
               <NavMain items={data.navUsers} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>System Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <NavMain items={data.navSystem} />
             </SidebarGroupContent>
           </SidebarGroup>
           <NavSecondary items={data.navSecondary} className="mt-auto" />

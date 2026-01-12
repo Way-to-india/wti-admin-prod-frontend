@@ -37,16 +37,14 @@ export function ToursFilter({
 }: ToursFilterProps) {
   const [localSearch, setLocalSearch] = useState(search);
 
-  // Sync local search with prop when reset is triggered
   useEffect(() => {
     setLocalSearch(search);
   }, [search]);
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       onSearchChange(localSearch);
-    }, 500); // 500ms delay
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [localSearch, onSearchChange]);

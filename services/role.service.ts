@@ -25,10 +25,19 @@ export interface RoleFilters {
   isActive?: boolean;
 }
 
+export interface CreateRoleData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateRoleData {
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
 export const roleService = {
-  /**
-   * Get all roles with optional filters
-   */
+  
   async getAllRoles(filters: RoleFilters = {}): Promise<RolesResponse> {
     const params = new URLSearchParams();
 
@@ -45,9 +54,6 @@ export const roleService = {
     throw new Error(response.message || 'Failed to fetch roles');
   },
 
-  /**
-   * Get a single role by ID
-   */
   async getRoleById(id: string): Promise<Role> {
     const response = await apiClient.get<Role>(`/admin/role/${id}`);
 
@@ -56,5 +62,33 @@ export const roleService = {
     }
 
     throw new Error(response.message || 'Failed to fetch role');
+  },
+
+  async createRole(data: CreateRoleData): Promise<Role> {
+    const response = await apiClient.post<Role>('/admin/role', data);
+
+    if (response.status && response.payload) {
+      return response.payload;
+    }
+
+    throw new Error(response.message || 'Failed to create role');
+  },
+
+  async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
+    const response = await apiClient.put<Role>(`/admin/role/${id}`, data);
+
+    if (response.status && response.payload) {
+      return response.payload;
+    }
+
+    throw new Error(response.message || 'Failed to update role');
+  },
+
+  async deleteRole(id: string): Promise<void> {
+    const response = await apiClient.delete(`/admin/role/${id}`);
+
+    if (!response.status) {
+      throw new Error(response.message || 'Failed to delete role');
+    }
   },
 };

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface DashboardData {
   overview: any;
@@ -59,9 +60,9 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <IconReload className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading dashboard...</p>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading dashboard..</p>
         </div>
       </div>
     );
