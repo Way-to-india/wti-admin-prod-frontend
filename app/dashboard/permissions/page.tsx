@@ -19,6 +19,7 @@ import { isAxiosError } from 'axios';
 import { Loader2, Lock, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { ADMIN_ROLE } from '@/types/role.types';
 
 interface PermissionMatrix {
   [roleId: string]: {
@@ -39,7 +40,7 @@ export default function PermissionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const isSuperAdmin = currentAdmin?.role?.name === 'Super Admin';
+  const isSuperAdmin = currentAdmin?.role?.name === ADMIN_ROLE.SUPER_ADMIN;
 
   useEffect(() => {
     if (!isSuperAdmin) return;
