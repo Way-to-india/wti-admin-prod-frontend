@@ -16,6 +16,7 @@ import {
   IconApps,
   IconLock,
   IconShield,
+  IconClipboardList,
 } from '@tabler/icons-react';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
@@ -25,13 +26,13 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 
@@ -56,7 +57,7 @@ const data = {
       title: 'Admins',
       url: '/dashboard/admins',
       icon: IconUsers,
-    }
+    },
   ],
   navModules: [
     {
@@ -78,6 +79,28 @@ const data = {
       title: 'Hero Slides',
       icon: IconPhoto,
       url: '/dashboard/hero-slides',
+    },
+  ],
+  navCRM: [
+    {
+      title: 'Dashboard',
+      url: '/dashboard/crm',
+      icon: IconDashboard,
+    },
+    {
+      title: 'All Leads',
+      url: '/dashboard/crm/leads',
+      icon: IconClipboardList,
+    },
+    {
+      title: 'Follow-ups',
+      url: '/dashboard/crm/follow-ups',
+      icon: IconBell,
+    },
+    {
+      title: 'Analytics',
+      url: '/dashboard/crm/analytics',
+      icon: IconTicket,
     },
   ],
   navLeads: [
@@ -132,7 +155,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className='border-r' collapsible="offcanvas" {...props}>
+    <Sidebar className="border-r" collapsible="offcanvas" {...props}>
       <ScrollArea className="h-174">
         <SidebarHeader>
           <SidebarMenu>
@@ -152,6 +175,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupLabel>Modules</SidebarGroupLabel>
             <SidebarGroupContent>
               <NavMain items={data.navModules} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>CRM</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <NavMain items={data.navCRM} />
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup>
