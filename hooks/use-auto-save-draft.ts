@@ -22,14 +22,7 @@ interface UseAutoSaveDraftReturn {
  * @param options.key - Unique localStorage key for this draft
  * @param options.data - The data object to auto-save
  * @param options.enabled - Whether auto-save is enabled (default: true)
- * @param options.debounceMs - Debounce delay in milliseconds (default: 5000)
- *
- * @example
- * const { loadDraft, clearDraft, hasDraft } = useAutoSaveDraft({
- *   key: 'tour-draft-create',
- *   data: formData,
- *   enabled: true
- * });
+ * @param options.debounceMs - Debounce delay in milliseconds (default: 10000)
  */
 export function useAutoSaveDraft<T>({
   key,
@@ -37,31 +30,34 @@ export function useAutoSaveDraft<T>({
   enabled = true,
   debounceMs = 10000,
 }: UseAutoSaveDraftOptions<T>): UseAutoSaveDraftReturn {
-
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
 
   /**
-   * Serialize data for storage, excluding File objects and functions
+   * Serialize data for storage
+   * Converts File objects to metadata that can be stored
    */
   const serializeData = useCallback((obj: any): any => {
     if (obj === null || obj === undefined) return obj;
 
+    // Handle File objects - store metadata instead of the file itself
     if (obj instanceof File || obj instanceof Blob) {
-      return undefined; // Exclude File objects
+      return {
+        __fileMetadata: true,
+        name: obj instanceof File ? obj.name : 'blob',
+        type: obj.type,
+        size: obj.size,
+      };
     }
 
     if (Array.isArray(obj)) {
-      return obj.map(serializeData).filter((item) => item !== undefined);
+      return obj.map(serializeData);
     }
 
     if (typeof obj === 'object') {
       const serialized: any = {};
       for (const [k, v] of Object.entries(obj)) {
-        const value = serializeData(v);
-        if (value !== undefined) {
-          serialized[k] = value;
-        }
+        serialized[k] = serializeData(v);
       }
       return serialized;
     }
@@ -80,6 +76,7 @@ export function useAutoSaveDraft<T>({
         timestamp: new Date().toISOString(),
       };
       localStorage.setItem(key, JSON.stringify(draftData));
+      console.log('Draft saved successfully');
     } catch (error) {
       console.error('Failed to save draft:', error);
     }
@@ -107,6 +104,7 @@ export function useAutoSaveDraft<T>({
   const clearDraft = useCallback(() => {
     try {
       localStorage.removeItem(key);
+      console.log('Draft cleared');
     } catch (error) {
       console.error('Failed to clear draft:', error);
     }
@@ -126,7 +124,6 @@ export function useAutoSaveDraft<T>({
 
   /**
    * Auto-save effect with debouncing
-   * Uses stringified data to prevent unnecessary re-renders
    */
   const dataString = useMemo(() => {
     try {
@@ -137,7 +134,7 @@ export function useAutoSaveDraft<T>({
   }, [data, serializeData]);
 
   useEffect(() => {
-    // Skip auto-save on initial mount to avoid overwriting existing draft
+    // Skip auto-save on initial mount
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
