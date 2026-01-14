@@ -9,18 +9,22 @@ import { ImagesTab } from '@/components/tours/create/ImagesTab';
 import { ItineraryTab } from '@/components/tours/create/ItineraryTab';
 import { PricingTab } from '@/components/tours/create/PricingTab';
 import { SettingsTab } from '@/components/tours/create/SettingsTab';
+import { DraftNotification } from '@/components/tours/draft-notification';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAutoSaveDraft } from '@/hooks/use-auto-save-draft';
 import { tourService } from '@/services/tour.service';
 import { ArrowLeft, CheckCircle2, Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function TourCreatePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const [showDraftNotification, setShowDraftNotification] = useState(false);
+  const [draftTimestamp, setDraftTimestamp] = useState('');
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -66,6 +70,110 @@ export default function TourCreatePage() {
   const [themes, setThemes] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [faqs, setFaqs] = useState<Array<{ question: string; answer: string; order: number }>>([]);
+
+  const draftData = useMemo(() => ({
+    title,
+    slug,
+    startCityId,
+    durationDays,
+    durationNights,
+    overview,
+    description,
+    highlights,
+    itinerary,
+    bestTime,
+    idealFor,
+    difficulty,
+    inclusions,
+    exclusions,
+    travelTips,
+    cancellationPolicy,
+    price,
+    discountPrice,
+    currency,
+    minGroupSize,
+    maxGroupSize,
+    isActive,
+    isFeatured,
+    metatitle,
+    metadesc,
+    themes,
+    cities,
+    faqs,
+    activeTab,
+  }), [
+    title, slug, startCityId, durationDays, durationNights,
+    overview, description, highlights, itinerary,
+    bestTime, idealFor, difficulty, inclusions, exclusions,
+    travelTips, cancellationPolicy, price, discountPrice,
+    currency, minGroupSize, maxGroupSize, isActive, isFeatured,
+    metatitle, metadesc, themes, cities, faqs, activeTab
+  ]);
+
+  // Auto-save hook
+  const { loadDraft, clearDraft, hasDraft } = useAutoSaveDraft({
+    key: 'tour-draft-create',
+    data: draftData,
+    enabled: !isSubmitting,
+  });
+
+  // Check for draft on mount
+  useEffect(() => {
+    if (hasDraft()) {
+      const stored = localStorage.getItem('tour-draft-create');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setDraftTimestamp(parsed.timestamp);
+        setShowDraftNotification(true);
+      }
+    }
+  }, []);
+
+  // Restore draft handler
+  const handleRestoreDraft = () => {
+    const draft = loadDraft<typeof draftData>();
+    if (draft) {
+      setTitle(draft.title || '');
+      setSlug(draft.slug || '');
+      setStartCityId(draft.startCityId || '');
+      setDurationDays(draft.durationDays || 1);
+      setDurationNights(draft.durationNights || 0);
+      setOverview(draft.overview || '');
+      setDescription(draft.description || '');
+      setHighlights(draft.highlights || []);
+      setItinerary(draft.itinerary || []);
+      setBestTime(draft.bestTime || '');
+      setIdealFor(draft.idealFor || '');
+      setDifficulty(draft.difficulty || '');
+      setInclusions(draft.inclusions || []);
+      setExclusions(draft.exclusions || []);
+      setTravelTips(draft.travelTips || '');
+      setCancellationPolicy(draft.cancellationPolicy || '');
+      setPrice(draft.price || 0);
+      setDiscountPrice(draft.discountPrice || 0);
+      setCurrency(draft.currency || 'INR');
+      setMinGroupSize(draft.minGroupSize || 1);
+      setMaxGroupSize(draft.maxGroupSize || 50);
+      setIsActive(draft.isActive ?? true);
+      setIsFeatured(draft.isFeatured ?? false);
+      setMetatitle(draft.metatitle || '');
+      setMetadesc(draft.metadesc || '');
+      setThemes(draft.themes || []);
+      setCities(draft.cities || []);
+      setFaqs(draft.faqs || []);
+      setActiveTab(draft.activeTab || 'basic');
+
+      toast.success('Draft restored successfully!');
+    }
+    setShowDraftNotification(false);
+  };
+
+  // Discard draft handler
+  const handleDiscardDraft = () => {
+    clearDraft();
+    setShowDraftNotification(false);
+    toast.info('Draft discarded');
+  };
 
   const validateForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
@@ -174,6 +282,9 @@ export default function TourCreatePage() {
 
       await tourService.createTour(tourData);
 
+      // Clear draft on successful creation
+      clearDraft();
+
       toast.success('Success!', {
         description: 'Tour created successfully!',
         icon: <CheckCircle2 className="h-5 w-5" />,
@@ -270,6 +381,16 @@ export default function TourCreatePage() {
               )}
             </Button>
           </div>
+
+          {showDraftNotification && (
+            <div className="px-4">
+              <DraftNotification
+                timestamp={draftTimestamp}
+                onRestore={handleRestoreDraft}
+                onDiscard={handleDiscardDraft}
+              />
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
