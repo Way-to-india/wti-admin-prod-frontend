@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { UpdateTourData } from '@/types/tour.types';
 
@@ -61,11 +60,10 @@ export function ContentTab({ formData, updateField }: ContentTabProps) {
           <CardDescription>Terms and conditions for cancellations</CardDescription>
         </CardHeader>
         <CardContent>
-          <Textarea
-            value={formData.cancellationPolicy || ''}
-            onChange={(e) => updateField('cancellationPolicy', e.target.value)}
+          <RichTextEditor
+            content={formData.cancellationPolicy || ''}
+            onChange={(content) => updateField('cancellationPolicy', content)}
             placeholder="Enter cancellation policy..."
-            rows={4}
           />
         </CardContent>
       </Card>

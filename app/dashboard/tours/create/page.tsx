@@ -28,10 +28,8 @@ export default function TourCreatePage() {
   const [showDraftNotification, setShowDraftNotification] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState('');
 
-  // Use custom hook for form state management
   const tourForm = useTourForm();
 
-  // Prepare draft data (excluding File objects for serialization)
   const draftData = useMemo(
     () => ({
       title: tourForm.title,
@@ -47,7 +45,6 @@ export default function TourCreatePage() {
         title: day.title,
         description: day.description,
         imageUrl: day.imageUrl,
-        // Note: File object will be converted to metadata by the hook
         image: day.image,
       })),
       bestTime: tourForm.bestTime,
@@ -74,14 +71,12 @@ export default function TourCreatePage() {
     [tourForm, activeTab]
   );
 
-  // Auto-save draft hook
   const { loadDraft, clearDraft, hasDraft } = useAutoSaveDraft({
     key: 'tour-draft-create',
     data: draftData,
     enabled: !isSubmitting,
   });
 
-  // Check for existing draft on mount
   useEffect(() => {
     if (hasDraft()) {
       const stored = localStorage.getItem('tour-draft-create');
@@ -110,7 +105,6 @@ export default function TourCreatePage() {
           title: day.title,
           description: day.description,
           imageUrl: day.imageUrl,
-          // File objects cannot be restored from draft
           image: undefined,
         })),
         bestTime: draft.bestTime || '',
@@ -242,7 +236,6 @@ export default function TourCreatePage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="create">
       <div className="min-h-screen">
         <div className="mx-auto max-w-7xl p-4 md:p-6">
-          {/* Header */}
           <div className="sticky top-0 bg-background z-50 border-b shadow-sm p-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -281,7 +274,6 @@ export default function TourCreatePage() {
             </Button>
           </div>
 
-          {/* Draft Notification */}
           {showDraftNotification && (
             <div className="px-4">
               <DraftNotification
@@ -292,7 +284,6 @@ export default function TourCreatePage() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-6 grid w-full grid-cols-3 lg:grid-cols-8 p-1 h-auto">
