@@ -68,7 +68,37 @@ export default function TourCreatePage() {
       faqs: tourForm.faqs,
       activeTab,
     }),
-    [tourForm, activeTab]
+    [
+      tourForm.title,
+      tourForm.slug,
+      tourForm.startCityId,
+      tourForm.durationDays,
+      tourForm.durationNights,
+      tourForm.overview,
+      tourForm.description,
+      tourForm.highlights,
+      tourForm.itinerary,
+      tourForm.bestTime,
+      tourForm.idealFor,
+      tourForm.difficulty,
+      tourForm.inclusions,
+      tourForm.exclusions,
+      tourForm.travelTips,
+      tourForm.cancellationPolicy,
+      tourForm.price,
+      tourForm.discountPrice,
+      tourForm.currency,
+      tourForm.minGroupSize,
+      tourForm.maxGroupSize,
+      tourForm.isActive,
+      tourForm.isFeatured,
+      tourForm.metatitle,
+      tourForm.metadesc,
+      tourForm.themes,
+      tourForm.cities,
+      tourForm.faqs,
+      activeTab,
+    ]
   );
 
   const { loadDraft, clearDraft, hasDraft } = useAutoSaveDraft({
