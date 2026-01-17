@@ -12,13 +12,12 @@ import { SettingsTab } from '@/components/tours/create/SettingsTab';
 import { DraftNotification } from '@/components/tours/draft-notification';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAutoSaveDraft } from '@/hooks/use-auto-save-draft';
+import { getTabStatus, validateTourForm } from '@/helpers/validateTour';
 import { useTourForm } from '@/hooks/useTourFrom';
-import { validateTourForm, getTabStatus } from '@/helpers/validateTour';
 import { tourService } from '@/services/tour.service';
 import { ArrowLeft, CheckCircle2, Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function TourCreatePage() {
@@ -30,8 +29,11 @@ export default function TourCreatePage() {
 
   const tourForm = useTourForm();
 
-  const draftData = useMemo(
-    () => ({
+  // Draft management functions
+  const DRAFT_KEY = 'tour-draft-create';
+
+  const saveDraftToStorage = () => {
+    const draftData = {
       title: tourForm.title,
       slug: tourForm.slug,
       startCityId: tourForm.startCityId,
@@ -40,13 +42,7 @@ export default function TourCreatePage() {
       overview: tourForm.overview,
       description: tourForm.description,
       highlights: tourForm.highlights,
-      itinerary: tourForm.itinerary.map((day) => ({
-        day: day.day,
-        title: day.title,
-        description: day.description,
-        imageUrl: day.imageUrl,
-        image: day.image,
-      })),
+      itinerary: tourForm.itinerary,
       bestTime: tourForm.bestTime,
       idealFor: tourForm.idealFor,
       difficulty: tourForm.difficulty,
@@ -67,59 +63,45 @@ export default function TourCreatePage() {
       cities: tourForm.cities,
       faqs: tourForm.faqs,
       activeTab,
-    }),
-    [
-      tourForm.title,
-      tourForm.slug,
-      tourForm.startCityId,
-      tourForm.durationDays,
-      tourForm.durationNights,
-      tourForm.overview,
-      tourForm.description,
-      tourForm.highlights,
-      tourForm.itinerary,
-      tourForm.bestTime,
-      tourForm.idealFor,
-      tourForm.difficulty,
-      tourForm.inclusions,
-      tourForm.exclusions,
-      tourForm.travelTips,
-      tourForm.cancellationPolicy,
-      tourForm.price,
-      tourForm.discountPrice,
-      tourForm.currency,
-      tourForm.minGroupSize,
-      tourForm.maxGroupSize,
-      tourForm.isActive,
-      tourForm.isFeatured,
-      tourForm.metatitle,
-      tourForm.metadesc,
-      tourForm.themes,
-      tourForm.cities,
-      tourForm.faqs,
-      activeTab,
-    ]
-  );
+    };
 
-  const { loadDraft, clearDraft, hasDraft } = useAutoSaveDraft({
-    key: 'tour-draft-create',
-    data: draftData,
-    enabled: !isSubmitting,
-  });
+    localStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify({
+        data: draftData,
+        timestamp: new Date().toISOString(),
+      })
+    );
+  };
+
+  const loadDraftFromStorage = () => {
+    const stored = localStorage.getItem(DRAFT_KEY);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    return parsed.data;
+  };
+
+  const clearDraftFromStorage = () => {
+    localStorage.removeItem(DRAFT_KEY);
+  };
+
+  const hasDraftInStorage = () => {
+    return localStorage.getItem(DRAFT_KEY) !== null;
+  };
 
   useEffect(() => {
-    if (hasDraft()) {
-      const stored = localStorage.getItem('tour-draft-create');
+    if (hasDraftInStorage()) {
+      const stored = localStorage.getItem(DRAFT_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setDraftTimestamp(parsed.timestamp);
         setShowDraftNotification(true);
       }
     }
-  }, [hasDraft]);
+  }, []);
 
   const handleRestoreDraft = () => {
-    const draft = loadDraft<typeof draftData>();
+    const draft = loadDraftFromStorage();
     if (draft) {
       tourForm.setFormData({
         title: draft.title || '',
@@ -130,7 +112,7 @@ export default function TourCreatePage() {
         overview: draft.overview || '',
         description: draft.description || '',
         highlights: draft.highlights || [],
-        itinerary: (draft.itinerary || []).map((day) => ({
+        itinerary: (draft.itinerary || []).map((day: any) => ({
           day: day.day,
           title: day.title,
           description: day.description,
@@ -164,9 +146,16 @@ export default function TourCreatePage() {
   };
 
   const handleDiscardDraft = () => {
-    clearDraft();
+    clearDraftFromStorage();
     setShowDraftNotification(false);
     toast.info('Draft discarded');
+  };
+
+  const handleSaveDraft = () => {
+    saveDraftToStorage();
+    toast.success('Draft saved successfully!', {
+      description: 'Your progress has been saved to drafts',
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,7 +218,7 @@ export default function TourCreatePage() {
       };
 
       await tourService.createTour(tourData);
-      clearDraft();
+      clearDraftFromStorage();
 
       toast.success('Success!', {
         description: 'Tour created successfully!',
@@ -284,24 +273,37 @@ export default function TourCreatePage() {
                 </div>
               </div>
             </div>
-            <Button
-              className="cursor-pointer"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              size="lg"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Create Tour
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+                size="lg"
+                className="cursor-pointer"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save as Draft
+              </Button>
+              <Button
+                className="cursor-pointer"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Create Tour
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {showDraftNotification && (
