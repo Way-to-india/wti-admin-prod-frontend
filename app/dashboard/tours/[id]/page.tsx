@@ -6,12 +6,13 @@ import { tourService } from '@/services/tour.service';
 import { Button } from '@/components/ui/button';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/contexts/auth-context';
-import { ArrowLeft, Edit, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Loader2, View } from 'lucide-react';
 import { TourHeader } from '@/components/tours/view/tour-header';
 import { TourStats } from '@/components/tours/view/tour-stats';
 import { TourImages } from '@/components/tours/view/tour-images';
 import { TourTabs } from '@/components/tours/view/tour-tabs';
 import { Tour } from '@/types/tour.types';
+import Link from 'next/link';
 
 export default function TourViewPage() {
   const params = useParams();
@@ -69,15 +70,27 @@ export default function TourViewPage() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            {canEdit && tour && (
-              <Button
+            <div className="flex gap-5">
+              <Link
+                target="_blank"
                 className="cursor-pointer"
-                onClick={() => router.push(`/dashboard/tours/${tour.id}/edit`)}
+                href={process.env.NEXT_PUBLIC_FRONTEND_URL + '/' + tour?.slug}
               >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Tour
-              </Button>
-            )}
+                <Button className='cursor-pointer'>
+                  <View className="mr-2 h-4 w-4" />
+                  Explore Tour
+                </Button>
+              </Link>
+              {canEdit && tour && (
+                <Button
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/dashboard/tours/${tour.id}/edit`)}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Tour
+                </Button>
+              )}
+            </div>
           </div>
 
           <TourHeader tour={tour} />
