@@ -275,16 +275,6 @@ export default function TourEditPage() {
             </div>
           </div>
 
-          {showDraftNotification && (
-            <div className="px-6">
-              <DraftNotification
-                timestamp={draftTimestamp}
-                onRestore={handleRestoreDraft}
-                onDiscard={handleDiscardDraft}
-              />
-            </div>
-          )}
-
           {/* Tabs */}
           <div className="p-6">
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
