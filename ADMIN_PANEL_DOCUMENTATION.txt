@@ -1,0 +1,178 @@
+WAY TO INDIA - ADMIN PANEL DOCUMENTATION
+========================================
+
+1. PROJECT OVERVIEW
+-------------------
+The Way to India Admin Panel is a modern, responsive dashboard application built with Next.js 16 and React 19. It serves as the central control hub for the entire platform, enabling administrators to manage tours, leads (CRM), users, travel guides, and system settings.
+
+Core Capabilities:
+- CRM: End-to-end lead management, including assignment, status tracking, and communication logging.
+- Tour Management: Full CRUD for tour packages, including itinerary building and image handling.
+- Content Management: Manage dynamic content like Hero Slides, Travel Guides, and Destinations.
+- User Management: View and manage customer accounts and admin roles.
+- Analytics: Visual dashboard with charts and key performance indicators.
+
+--------------------------------------------------------------------------------
+
+2. TECHNOLOGY STACK
+-------------------
+- Framework:       Next.js 16 (App Router)
+- UI Library:      React 19
+- Styling:         Tailwind CSS 4
+- Components:      Shadcn UI (Radix based)
+- Language:        TypeScript
+- State & Data:    Axios (API), React Hooks
+- Forms:           React Hook Form + Zod Validation
+- Editor:          TipTap (Rich Text)
+- Charts:          Recharts
+- Tables:          Tanstack Table
+- Drag & Drop:     DND Kit
+- Icons:           Tabler Icons & Lucide React
+- Date Handling:   date-fns
+
+--------------------------------------------------------------------------------
+
+3. PROJECT STRUCTURE
+--------------------
+way-to-india-admin/
+|-- app/                        # Next.js App Router Pages
+|   |-- dashboard/              # Protected Dashboard Area
+|   |   |-- page.tsx            # Main Dashboard Overview
+|   |   |-- crm/                # CRM Module (Leads, Activities)
+|   |   |-- tours/              # Tour Management
+|   |   |-- users/              # User Management
+|   |   |-- travel-guide/       # Guide Content Management
+|   |-- login/                  # Auth Pages
+|   |-- layout.tsx              # Root Layout
+|   |-- globals.css             # Global Styles
+|
+|-- components/                 # React Components
+|   |-- ui/                     # Reusable Shadcn UI Components (Button, Card, Input...)
+|   |-- dashboard/              # Dashboard Widgets (Stats, Charts)
+|   |-- crm/                    # CRM Specific Components (LeadTable, LeadForms)
+|   |-- tours/                  # Tour Specific Components (ItineraryEditor)
+|   |-- shared/                 # Shared Custom Components (RichTextEditor, DataTable)
+|
+|-- services/                   # API Integration Layer
+|   |-- api.ts                  # Axios Configuration & Interceptors
+|   |-- auth.service.ts         # Authentication API calls
+|   |-- tour.service.ts         # Tour Management API calls
+|   |-- crm.service.ts          # CRM API calls
+|
+|-- types/                      # TypeScript Interfaces
+|   |-- lead.ts
+|   |-- tour.ts
+|   |-- common.ts
+|
+|-- lib/                        # Utilities & Helpers
+|   |-- utils.ts                # CNC class merger (Tailwind)
+|   |-- validators.ts           # Zod Schemas
+
+--------------------------------------------------------------------------------
+
+4. KEY FEATURES
+---------------
+
+A. CRM System (/dashboard/crm)
+   - Leads: View, Filter, and Sort leads. Custom "Kanban-like" status tracking.
+   - Activities: Timeline view of calls, emails, and meetings.
+   - Quotations: Upload and track PDF quotes for clients.
+   - Reminders: Set follow-up reminders with snooze functionality.
+
+B. Tour Management (/dashboard/tours)
+   - Create/Edit: Comprehensive multi-step form.
+   - Itinerary Builder: Dynamic day-wise itinerary creator with rich text.
+   - Pricing: Manage base price, discounts, and guides.
+   - Images: Drag-and-drop upload to S3 (via backend).
+
+C. Travel Guide (/dashboard/travel-guide)
+   - Hierarchy: Manage States -> Cities -> Guide Data.
+   - Content: Tabbed interface for rich detailed content (History, Food, Culture).
+
+D. Role-Based Access Control
+   - Admins have specific Roles (Super Admin, Sales, Editor).
+   - Permissions are defined per Module (View/Create/Edit/Delete).
+   - UI adapts based on user permissions (hides unauthorized sections).
+
+--------------------------------------------------------------------------------
+
+5. SETUP INSTRUCTIONS
+---------------------
+Prerequisites:
+- Node.js v20+
+- npm or bun
+
+Step 1: Environment Setup
+   Create a .env.local file in the root:
+   
+   NEXT_PUBLIC_API_URL=http://localhost:5000
+
+Step 2: Install Dependencies
+   Run: `npm install` --legacy-peer-deps (if needed due to React 19 beta)
+
+Step 3: Run Development Server
+   Run: `npm run dev`
+   Access: http://localhost:3000
+
+Step 4: Build for Production
+   Run: `npm run build`
+   Run: `npm start`
+
+--------------------------------------------------------------------------------
+
+6. DEVELOPMENT WORKFLOWS
+------------------------
+
+A. Creating a New Dashboard Page
+   1. Create folder: `app/dashboard/my-feature/`
+   2. Create `page.tsx`:
+      ```tsx
+      export default function MyFeaturePage() {
+        return <div className="p-6">Content Here</div>;
+      }
+      ```
+   3. Add link to `components/dashboard/Sidebar.tsx`.
+
+B. Adding an API Integration
+   1. Define Types in `types/my-feature.ts`.
+   2. Create Service in `services/my-feature.service.ts`:
+      ```ts
+      import api from './api';
+      export const myService = {
+        getAll: () => api.get('/endpoint').then(res => res.data),
+      };
+      ```
+   3. Use in Component:
+      ```tsx
+      useEffect(() => {
+        myService.getAll().then(setData);
+      }, []);
+      ```
+
+C. Using the Data Table
+   The `DataTable` component is highly reusable.
+   ```tsx
+   <DataTable 
+     columns={columns} 
+     data={data} 
+     searchable 
+     searchKey="name" 
+     pagination 
+   />
+   ```
+
+--------------------------------------------------------------------------------
+
+7. COMPONENT ARCHITECTURE & STYLING
+-----------------------------------
+- Styling: We use Tailwind CSS 4.
+- Icons: Tabler Icons (`@tabler/icons-react`) is the primary icon set.
+- Theme: Dark/Light mode is supported via `next-themes`.
+- Shadcn UI: Components are in `components/ui`. Do not modify them directly unless necessary; treat them as library code.
+
+8. DEPLOYMENT
+-----------------------------------
+- The app is optimized for Vercel or any Node.js hosting.
+- Ensure `NEXT_PUBLIC_API_URL` points to the production backend.
+- Build command: `npm run build`.
+- Output: `.next` folder (standalone mode supported).

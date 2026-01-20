@@ -1,6 +1,7 @@
-import { Tour } from '@/services/tour.service';
+import { ReadMoreContainer } from '@/components/common/read-more-container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Users, TrendingUp, MapPin, IndianRupee, Info } from 'lucide-react';
+import { Tour } from '@/types/tour.types';
+import { Clock, IndianRupee, Info, MapPin, TrendingUp, Users } from 'lucide-react';
 
 interface DetailsTabProps {
   tour: Tour;
@@ -83,10 +84,12 @@ export function DetailsTab({ tour }: DetailsTabProps) {
             <CardTitle>Travel Tips</CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className="prose max-w-none prose-headings:text-foreground prose-p:text-foreground"
-              dangerouslySetInnerHTML={{ __html: tour.travelTips }}
-            />
+            <ReadMoreContainer maxHeight={200}>
+              <div
+                className="prose max-w-none prose-headings:text-foreground prose-p:text-foreground"
+                dangerouslySetInnerHTML={{ __html: tour.travelTips }}
+              />
+            </ReadMoreContainer>
           </CardContent>
         </Card>
       )}

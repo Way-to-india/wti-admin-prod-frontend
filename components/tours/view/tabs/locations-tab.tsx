@@ -1,4 +1,4 @@
-import { Tour } from '@/services/tour.service';
+import { Tour } from '@/types/tour.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, FileText } from 'lucide-react';

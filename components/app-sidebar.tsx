@@ -1,23 +1,5 @@
 'use client';
 
-import * as React from 'react';
-import {
-  IconBell,
-  IconDashboard,
-  IconSettings,
-  IconMap2,
-  IconMapPin,
-  IconBook,
-  IconTicket,
-  IconBuildingSkyscraper,
-  IconCar,
-  IconUsers,
-  IconPhoto,
-  IconApps,
-  IconLock,
-  IconShield,
-  IconClipboardList,
-} from '@tabler/icons-react';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
@@ -34,6 +16,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import {
+  IconApps,
+  IconArticle,
+  IconBell,
+  IconBook,
+  IconBuildingSkyscraper,
+  IconCar,
+  IconClipboardList,
+  IconDashboard,
+  IconFileText,
+  IconLock,
+  IconMap2,
+  IconMapPin,
+  IconPhoto,
+  IconSettings,
+  IconShield,
+  IconTicket,
+  IconUsers,
+} from '@tabler/icons-react';
 import Link from 'next/link';
 
 const data = {
@@ -66,6 +67,11 @@ const data = {
       url: '/dashboard/tours',
     },
     {
+      title: 'Drafts',
+      icon: IconFileText,
+      url: '/dashboard/drafts',
+    },
+    {
       title: 'Travel Guide',
       icon: IconBook,
       url: '/dashboard/travel-guide',
@@ -79,6 +85,11 @@ const data = {
       title: 'Hero Slides',
       icon: IconPhoto,
       url: '/dashboard/hero-slides',
+    },
+    {
+      title: 'Blogs',
+      icon: IconArticle,
+      url: '/dashboard/blogs',
     },
   ],
   navCRM: [

@@ -1,14 +1,13 @@
-// components/dashboard/dashboard-stats.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  IconUsers,
+  IconCurrencyRupee,
   IconMap2,
   IconStar,
-  IconCurrencyRupee,
-  IconUserCheck,
   IconTicket,
-  IconTrendingUp,
   IconTrendingDown,
+  IconTrendingUp,
+  IconUserCheck,
+  IconUsers,
 } from '@tabler/icons-react';
 
 interface StatsProps {
@@ -84,18 +83,18 @@ export function DashboardStats({ data }: StatsProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
-        const isPositive = stat.change && parseFloat(stat.change) > 0;
+        const isPositive = stat.change ? Number(stat.change) > 0 : false;
         const TrendIcon = isPositive ? IconTrendingUp : IconTrendingDown;
 
         return (
-          <Card key={index} className="overflow-hidden">
+          <Card key={index} className="overflow-hidden h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               <div className={`rounded-lg p-2 ${stat.bgColor}`}>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col justify-between">
               <div className="text-2xl font-bold">{stat.value.toLocaleString()}</div>
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">{stat.description}</p>
@@ -106,7 +105,7 @@ export function DashboardStats({ data }: StatsProps) {
                     }`}
                   >
                     <TrendIcon className="h-3 w-3" />
-                    <span>{stat.change}</span>
+                    <span>{stat.change}%</span>
                   </div>
                 )}
               </div>

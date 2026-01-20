@@ -9,153 +9,140 @@ import { ImagesTab } from '@/components/tours/create/ImagesTab';
 import { ItineraryTab } from '@/components/tours/create/ItineraryTab';
 import { PricingTab } from '@/components/tours/create/PricingTab';
 import { SettingsTab } from '@/components/tours/create/SettingsTab';
-import { DraftNotification } from '@/components/tours/draft-notification';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getTabStatus, validateTourForm } from '@/helpers/validateTour';
 import { useTourForm } from '@/hooks/useTourFrom';
+import { tourDraftService } from '@/services/tour-draft.service';
 import { tourService } from '@/services/tour.service';
 import { ArrowLeft, CheckCircle2, Loader2, Save } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function TourCreatePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const draftId = searchParams.get('draftId');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
-  const [showDraftNotification, setShowDraftNotification] = useState(false);
-  const [draftTimestamp, setDraftTimestamp] = useState('');
+  const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null);
 
   const tourForm = useTourForm();
 
-  // Draft management functions
-  const DRAFT_KEY = 'tour-draft-create';
-
-  const saveDraftToStorage = () => {
-    const draftData = {
-      title: tourForm.title,
-      slug: tourForm.slug,
-      startCityId: tourForm.startCityId,
-      durationDays: tourForm.durationDays,
-      durationNights: tourForm.durationNights,
-      overview: tourForm.overview,
-      description: tourForm.description,
-      highlights: tourForm.highlights,
-      itinerary: tourForm.itinerary,
-      bestTime: tourForm.bestTime,
-      idealFor: tourForm.idealFor,
-      difficulty: tourForm.difficulty,
-      inclusions: tourForm.inclusions,
-      exclusions: tourForm.exclusions,
-      travelTips: tourForm.travelTips,
-      cancellationPolicy: tourForm.cancellationPolicy,
-      price: tourForm.price,
-      discountPrice: tourForm.discountPrice,
-      currency: tourForm.currency,
-      minGroupSize: tourForm.minGroupSize,
-      maxGroupSize: tourForm.maxGroupSize,
-      isActive: tourForm.isActive,
-      isFeatured: tourForm.isFeatured,
-      metatitle: tourForm.metatitle,
-      metadesc: tourForm.metadesc,
-      themes: tourForm.themes,
-      cities: tourForm.cities,
-      faqs: tourForm.faqs,
-      activeTab,
-    };
-
-    localStorage.setItem(
-      DRAFT_KEY,
-      JSON.stringify({
-        data: draftData,
-        timestamp: new Date().toISOString(),
-      })
-    );
-  };
-
-  const loadDraftFromStorage = () => {
-    const stored = localStorage.getItem(DRAFT_KEY);
-    if (!stored) return null;
-    const parsed = JSON.parse(stored);
-    return parsed.data;
-  };
-
-  const clearDraftFromStorage = () => {
-    localStorage.removeItem(DRAFT_KEY);
-  };
-
-  const hasDraftInStorage = () => {
-    return localStorage.getItem(DRAFT_KEY) !== null;
-  };
-
+  // Load draft from database if draftId is present
   useEffect(() => {
-    if (hasDraftInStorage()) {
-      const stored = localStorage.getItem(DRAFT_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setDraftTimestamp(parsed.timestamp);
-        setShowDraftNotification(true);
-      }
+    if (draftId) {
+      loadDraftFromDatabase(draftId);
     }
-  }, []);
+  }, [draftId]);
 
-  const handleRestoreDraft = () => {
-    const draft = loadDraftFromStorage();
-    if (draft) {
+  const loadDraftFromDatabase = async (id: string) => {
+    try {
+      const draft = await tourDraftService.getDraftById(id);
+      const draftData = draft.draftData;
+
       tourForm.setFormData({
-        title: draft.title || '',
-        slug: draft.slug || '',
-        startCityId: draft.startCityId || '',
-        durationDays: draft.durationDays || 1,
-        durationNights: draft.durationNights || 0,
-        overview: draft.overview || '',
-        description: draft.description || '',
-        highlights: draft.highlights || [],
-        itinerary: (draft.itinerary || []).map((day: any) => ({
+        title: draftData.title || '',
+        slug: draftData.slug || '',
+        startCityId: draftData.startCityId || '',
+        durationDays: draftData.durationDays || 1,
+        durationNights: draftData.durationNights || 0,
+        overview: draftData.overview || '',
+        description: draftData.description || '',
+        highlights: draftData.highlights || [],
+        itinerary: (draftData.itinerary || []).map((day: any) => ({
           day: day.day,
           title: day.title,
           description: day.description,
           imageUrl: day.imageUrl,
           image: undefined,
         })),
-        bestTime: draft.bestTime || '',
-        idealFor: draft.idealFor || '',
-        difficulty: draft.difficulty || '',
-        inclusions: draft.inclusions || [],
-        exclusions: draft.exclusions || [],
-        travelTips: draft.travelTips || '',
-        cancellationPolicy: draft.cancellationPolicy || '',
-        price: draft.price || 0,
-        discountPrice: draft.discountPrice || 0,
-        currency: draft.currency || 'INR',
-        minGroupSize: draft.minGroupSize || 1,
-        maxGroupSize: draft.maxGroupSize || 50,
-        isActive: draft.isActive ?? true,
-        isFeatured: draft.isFeatured ?? false,
-        metatitle: draft.metatitle || '',
-        metadesc: draft.metadesc || '',
-        themes: draft.themes || [],
-        cities: draft.cities || [],
-        faqs: draft.faqs || [],
+        bestTime: draftData.bestTime || '',
+        idealFor: draftData.idealFor || '',
+        difficulty: draftData.difficulty || '',
+        inclusions: draftData.inclusions || [],
+        exclusions: draftData.exclusions || [],
+        travelTips: draftData.travelTips || '',
+        cancellationPolicy: draftData.cancellationPolicy || '',
+        price: draftData.price || 0,
+        discountPrice: draftData.discountPrice || 0,
+        currency: draftData.currency || 'INR',
+        minGroupSize: draftData.minGroupSize || 1,
+        maxGroupSize: draftData.maxGroupSize || 50,
+        isActive: draftData.isActive ?? true,
+        isFeatured: draftData.isFeatured ?? false,
+        metatitle: draftData.metatitle || '',
+        metadesc: draftData.metadesc || '',
+        themes: draftData.themes || [],
+        cities: draftData.cities || [],
+        faqs: draftData.faqs || [],
       });
-      setActiveTab(draft.activeTab || 'basic');
-      toast.success('Draft restored successfully!');
+
+      setActiveTab(draftData.activeTab || 'basic');
+      setLoadedDraftId(id);
+      toast.success('Draft loaded successfully!');
+    } catch (error) {
+      console.error('Error loading draft:', error);
+      toast.error((error as Error).message || 'Failed to load draft');
     }
-    setShowDraftNotification(false);
   };
 
-  const handleDiscardDraft = () => {
-    clearDraftFromStorage();
-    setShowDraftNotification(false);
-    toast.info('Draft discarded');
-  };
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      const draftData = {
+        title: tourForm.title,
+        slug: tourForm.slug,
+        startCityId: tourForm.startCityId,
+        durationDays: tourForm.durationDays,
+        durationNights: tourForm.durationNights,
+        overview: tourForm.overview,
+        description: tourForm.description,
+        highlights: tourForm.highlights,
+        itinerary: tourForm.itinerary,
+        bestTime: tourForm.bestTime,
+        idealFor: tourForm.idealFor,
+        difficulty: tourForm.difficulty,
+        inclusions: tourForm.inclusions,
+        exclusions: tourForm.exclusions,
+        travelTips: tourForm.travelTips,
+        cancellationPolicy: tourForm.cancellationPolicy,
+        price: tourForm.price,
+        discountPrice: tourForm.discountPrice,
+        currency: tourForm.currency,
+        minGroupSize: tourForm.minGroupSize,
+        maxGroupSize: tourForm.maxGroupSize,
+        isActive: tourForm.isActive,
+        isFeatured: tourForm.isFeatured,
+        metatitle: tourForm.metatitle,
+        metadesc: tourForm.metadesc,
+        themes: tourForm.themes,
+        cities: tourForm.cities,
+        faqs: tourForm.faqs,
+        activeTab,
+      };
 
-  const handleSaveDraft = () => {
-    saveDraftToStorage();
-    toast.success('Draft saved successfully!', {
-      description: 'Your progress has been saved to drafts',
-    });
+      const savedDraft = await tourDraftService.saveDraft(
+        {
+          draftData,
+          title: tourForm.title || 'Untitled Tour Draft',
+        },
+        loadedDraftId || undefined
+      );
+
+      setLoadedDraftId(savedDraft.id);
+      toast.success('Draft saved successfully!', {
+        description: 'Your progress has been saved to drafts',
+      });
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast.error((error as Error).message || 'Failed to save draft');
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -218,7 +205,6 @@ export default function TourCreatePage() {
       };
 
       await tourService.createTour(tourData);
-      clearDraftFromStorage();
 
       toast.success('Success!', {
         description: 'Tour created successfully!',
@@ -278,12 +264,21 @@ export default function TourCreatePage() {
                 type="button"
                 variant="outline"
                 onClick={handleSaveDraft}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isSavingDraft}
                 size="lg"
                 className="cursor-pointer"
               >
-                <Save className="mr-2 h-4 w-4" />
-                Save as Draft
+                {isSavingDraft ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save as Draft
+                  </>
+                )}
               </Button>
               <Button
                 className="cursor-pointer"
@@ -305,16 +300,6 @@ export default function TourCreatePage() {
               </Button>
             </div>
           </div>
-
-          {showDraftNotification && (
-            <div className="px-4">
-              <DraftNotification
-                timestamp={draftTimestamp}
-                onRestore={handleRestoreDraft}
-                onDiscard={handleDiscardDraft}
-              />
-            </div>
-          )}
 
           <form onSubmit={handleSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

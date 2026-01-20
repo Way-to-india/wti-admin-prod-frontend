@@ -1,19 +1,18 @@
-// components/dashboard/dashboard-charts.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
-  LineChart,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
   Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
 } from 'recharts';
 
 const COLORS = [
@@ -58,13 +57,19 @@ export function DashboardCharts({ data, showAll = false }: ChartsProps) {
     })
   );
 
+  interface ThemeItem {
+    label?: string;
+    name?: string;
+    tourCount?: number;
+  }
+
   const themeData = (data?.distributions?.toursByTheme || [])
     .slice(0, 8)
-    .map((theme: any) => ({
+    .map((theme: ThemeItem) => ({
       name: theme.label || theme.name || 'Unknown',
       tours: theme.tourCount || 0,
     }))
-    .filter((item) => item.tours > 0);
+    .filter((item: { name: string; tours: number }) => item.tours > 0);
 
   const userGrowth = (data?.trends?.usersGrowth || []).map((item: any) => ({
     date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -90,12 +95,12 @@ export function DashboardCharts({ data, showAll = false }: ChartsProps) {
       {/* Leads Overview */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Leads by Source */}
-        <Card>
+        <Card className="h-full flex flex-col">
           <CardHeader>
             <CardTitle>Leads by Source</CardTitle>
             <CardDescription>Distribution across different channels</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {leadsSource.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -124,12 +129,12 @@ export function DashboardCharts({ data, showAll = false }: ChartsProps) {
         </Card>
 
         {/* Leads by Status */}
-        <Card>
+        <Card className="h-full flex flex-col">
           <CardHeader>
             <CardTitle>Leads by Status</CardTitle>
             <CardDescription>Current status of all leads</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {leadsStatus.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={leadsStatus}>
@@ -151,12 +156,12 @@ export function DashboardCharts({ data, showAll = false }: ChartsProps) {
 
       {/* Tours by Theme */}
       {themeData.length > 0 && (
-        <Card>
+        <Card className="h-full flex flex-col">
           <CardHeader>
             <CardTitle>Tours by Theme</CardTitle>
             <CardDescription>Top performing tour themes</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={themeData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

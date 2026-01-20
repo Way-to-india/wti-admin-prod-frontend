@@ -97,28 +97,77 @@ class ApiClient {
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    const response = await this.client.get(url, config);
-    return response.data;
+    try {
+      const response = await this.client.get(url, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    const response = await this.client.post(url, data, config);
-    return response.data;
+    try {
+      const response = await this.client.post(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    const response = await this.client.put(url, data, config);
-    return response.data;
+    try {
+      const response = await this.client.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    const response = await this.client.delete(url, config);
-    return response.data;
+    try {
+      const response = await this.client.delete(url, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    const response = await this.client.patch(url, data, config);
-    return response.data;
+    try {
+      const response = await this.client.patch(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  private handleError(error: any): Error {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<ApiResponse>;
+
+      // Extract error message from backend response
+      if (axiosError.response?.data) {
+        const errorData = axiosError.response.data;
+
+        // If backend sent a message, use it
+        if (errorData.message) {
+          return new Error(errorData.message);
+        }
+
+        // If there's a payload with error details, use it
+        if (typeof errorData.payload === 'string') {
+          return new Error(errorData.payload);
+        }
+      }
+
+      // Fallback to axios error message
+      if (axiosError.message) {
+        return new Error(`Request failed: ${axiosError.message}`);
+      }
+    }
+
+    // Generic fallback
+    return new Error(error?.message || 'An unexpected error occurred');
   }
 
   private async refreshToken(refreshToken: string): Promise<ApiResponse<{ accessToken: string }>> {

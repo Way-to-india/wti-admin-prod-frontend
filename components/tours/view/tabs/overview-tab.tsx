@@ -1,10 +1,12 @@
-import { Tour } from '@/services/tour.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, CheckCircle } from 'lucide-react';
+import { Tour } from '@/types/tour.types';
+import { CheckCircle, TrendingUp } from 'lucide-react';
 
 interface OverviewTabProps {
   tour: Tour;
 }
+
+import { ReadMoreContainer } from '@/components/common/read-more-container';
 
 export function OverviewTab({ tour }: OverviewTabProps) {
   return (
@@ -15,10 +17,12 @@ export function OverviewTab({ tour }: OverviewTabProps) {
             <CardTitle>Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className="prose max-w-none prose-headings:text-foreground prose-p:text-foreground"
-              dangerouslySetInnerHTML={{ __html: tour.overview }}
-            />
+            <ReadMoreContainer maxHeight={150}>
+              <div
+                className="prose max-w-none prose-headings:text-foreground prose-p:text-foreground"
+                dangerouslySetInnerHTML={{ __html: tour.overview }}
+              />
+            </ReadMoreContainer>
           </CardContent>
         </Card>
       )}
@@ -29,10 +33,12 @@ export function OverviewTab({ tour }: OverviewTabProps) {
             <CardTitle>Description</CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className="prose max-w-none prose-headings:text-foreground prose-p:text-foreground"
-              dangerouslySetInnerHTML={{ __html: tour.description }}
-            />
+            <ReadMoreContainer maxHeight={200}>
+              <div
+                className="prose max-w-none prose-headings:text-foreground prose-p:text-foreground"
+                dangerouslySetInnerHTML={{ __html: tour.description }}
+              />
+            </ReadMoreContainer>
           </CardContent>
         </Card>
       )}

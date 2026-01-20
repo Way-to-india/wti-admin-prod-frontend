@@ -1,5 +1,6 @@
-import { Tour } from '@/services/tour.service';
+import { ReadMoreContainer } from '@/components/common/read-more-container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tour } from '@/types/tour.types';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 interface InclusionsTabProps {
@@ -42,11 +43,13 @@ export function InclusionsTab({ tour }: InclusionsTabProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {tour.inclusions.map((inc, i) => (
-                <ListItem key={i} text={inc} type="inclusion" />
-              ))}
-            </div>
+            <ReadMoreContainer maxHeight={300} className="md:max-h-none">
+              <div className="space-y-2">
+                {tour.inclusions.map((inc: string, i: number) => (
+                  <ListItem key={i} text={inc} type="inclusion" />
+                ))}
+              </div>
+            </ReadMoreContainer>
           </CardContent>
         </Card>
       )}
@@ -60,11 +63,13 @@ export function InclusionsTab({ tour }: InclusionsTabProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {tour.exclusions.map((exc, i) => (
-                <ListItem key={i} text={exc} type="exclusion" />
-              ))}
-            </div>
+            <ReadMoreContainer maxHeight={300} className="md:max-h-none">
+              <div className="space-y-2">
+                {tour.exclusions.map((exc: string, i: number) => (
+                  <ListItem key={i} text={exc} type="exclusion" />
+                ))}
+              </div>
+            </ReadMoreContainer>
           </CardContent>
         </Card>
       )}
