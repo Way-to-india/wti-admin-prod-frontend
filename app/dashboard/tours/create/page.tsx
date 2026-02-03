@@ -9,21 +9,21 @@ import { ImagesTab } from '@/components/tours/create/ImagesTab';
 import { ItineraryTab } from '@/components/tours/create/ItineraryTab';
 import { PricingTab } from '@/components/tours/create/PricingTab';
 import { SettingsTab } from '@/components/tours/create/SettingsTab';
-import { Button } from '@/components/ui/button';
+import { TourFormHeader } from '@/components/tours/tour-form-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getTabStatus, validateTourForm } from '@/helpers/validateTour';
 import { useTourForm } from '@/hooks/useTourFrom';
 import { tourDraftService } from '@/services/tour-draft.service';
 import { tourService } from '@/services/tour.service';
-import { ArrowLeft, CheckCircle2, Loader2, Save } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Suspense } from 'react';
+import { SaveDraftDialog } from '@/components/tours/save-draft-dialog';
 
 function CreateTourForm() {
-  
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftId = searchParams.get('draftId');
@@ -32,6 +32,7 @@ function CreateTourForm() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null);
+  const [isDraftDialogOpen, setIsDraftDialogOpen] = useState(false);
 
   const tourForm = useTourForm();
 
@@ -93,10 +94,22 @@ function CreateTourForm() {
     }
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraftClick = () => {
+    setIsDraftDialogOpen(true);
+  };
+
+  const executeSaveDraft = async (draftName: string) => {
     setIsSavingDraft(true);
     try {
-      const draftData = {
+      // 1. Separate new files and existing URLs
+      const existingImages = tourForm.images.filter((img): img is string => typeof img === 'string');
+      const newImageFiles = tourForm.images.filter((img): img is File => img instanceof File);
+
+      const coverImageUrl = typeof tourForm.coverImage === 'string' ? tourForm.coverImage : null;
+      const newCoverImage = tourForm.coverImage instanceof File ? tourForm.coverImage : null;
+
+      // Prepare base draft data
+      const getDraftData = (imgUrls: string[], coverUrl: string | null) => ({
         title: tourForm.title,
         slug: tourForm.slug,
         startCityId: tourForm.startCityId,
@@ -104,13 +117,13 @@ function CreateTourForm() {
         durationNights: tourForm.durationNights,
         overview: tourForm.overview,
         description: tourForm.description,
-        highlights: tourForm.highlights,
+        highlights: tourForm.highlights.filter((h) => h.trim()),
         itinerary: tourForm.itinerary,
         bestTime: tourForm.bestTime,
         idealFor: tourForm.idealFor,
         difficulty: tourForm.difficulty,
-        inclusions: tourForm.inclusions,
-        exclusions: tourForm.exclusions,
+        inclusions: tourForm.inclusions.filter((i) => i.trim()),
+        exclusions: tourForm.exclusions.filter((e) => e.trim()),
         travelTips: tourForm.travelTips,
         cancellationPolicy: tourForm.cancellationPolicy,
         price: tourForm.price,
@@ -126,20 +139,60 @@ function CreateTourForm() {
         cities: tourForm.cities,
         faqs: tourForm.faqs,
         activeTab,
-      };
+        images: imgUrls,
+        coverImage: coverUrl,
+      });
 
+      let currentDraftId = loadedDraftId;
+
+      // 2. Initial Save (or Update) to ensure we have an ID and save metadata
+      const initialData = getDraftData(existingImages, coverImageUrl);
       const savedDraft = await tourDraftService.saveDraft(
         {
-          draftData,
-          title: tourForm.title || 'Untitled Tour Draft',
+          draftName,
+          draftData: initialData,
         },
-        loadedDraftId || undefined
+        currentDraftId || undefined
       );
 
-      setLoadedDraftId(savedDraft.id);
+      currentDraftId = savedDraft.id;
+      setLoadedDraftId(currentDraftId);
+
+      // 3. Upload New Images if any
+      const uploadedImageUrls: string[] = [];
+      if (newImageFiles.length > 0 && currentDraftId) {
+        const urls = await tourDraftService.uploadDraftImages(currentDraftId, newImageFiles);
+        uploadedImageUrls.push(...urls);
+      }
+
+      let uploadedCoverUrl: string | null = null;
+      if (newCoverImage && currentDraftId) {
+        const urls = await tourDraftService.uploadDraftImages(currentDraftId, [newCoverImage]);
+        uploadedCoverUrl = urls[0];
+      }
+
+      // 4. Final Update if new images were uploaded
+      if (newImageFiles.length > 0 || newCoverImage) {
+        const finalImages = [...existingImages, ...uploadedImageUrls];
+        const finalCover = uploadedCoverUrl || coverImageUrl;
+
+        await tourDraftService.saveDraft(
+          {
+            draftName,
+            draftData: getDraftData(finalImages, finalCover),
+          },
+          currentDraftId
+        );
+
+        // Update local state to treat uploaded files as existing URLs preventing re-upload
+        tourForm.setImages(finalImages);
+        if (finalCover) tourForm.setCoverImage(finalCover);
+      }
+
       toast.success('Draft saved successfully!', {
         description: 'Your progress has been saved to drafts',
       });
+      setIsDraftDialogOpen(false);
     } catch (error) {
       console.error('Error saving draft:', error);
       toast.error((error as Error).message || 'Failed to save draft');
@@ -243,67 +296,16 @@ function CreateTourForm() {
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl p-4 md:p-6">
-        <div className="sticky top-0 bg-background z-50 border-b shadow-sm p-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => router.back()}
-                className="cursor-pointer h-9 w-9 p-0"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold md:text-3xl">Create New Tour</h1>
-                <p className="text-sm text-muted-foreground">
-                  Fill in all the details to create a comprehensive tour package
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSaveDraft}
-              disabled={isSubmitting || isSavingDraft}
-              size="lg"
-              className="cursor-pointer"
-            >
-              {isSavingDraft ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save as Draft
-                </>
-              )}
-            </Button>
-            <Button
-              className="cursor-pointer"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              size="lg"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Create Tour
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit}>
+          <TourFormHeader
+            title="Create New Tour"
+            subtitle="Fill in all the details to create a comprehensive tour package"
+            isSubmitting={isSubmitting}
+            isSavingDraft={isSavingDraft}
+            onSaveDraft={handleSaveDraftClick}
+            submitButtonText="Create Tour"
+            showDraftButton={true}
+          />
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-3 lg:grid-cols-8 p-1 h-auto">
               {tabs.map((tab) => {
@@ -419,6 +421,13 @@ function CreateTourForm() {
           </Tabs>
         </form>
       </div>
+      <SaveDraftDialog
+        isOpen={isDraftDialogOpen}
+        onClose={() => setIsDraftDialogOpen(false)}
+        onSave={executeSaveDraft}
+        isSaving={isSavingDraft}
+        tourTitle={tourForm.title}
+      />
     </div>
   );
 }

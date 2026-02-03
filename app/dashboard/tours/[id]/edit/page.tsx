@@ -1,7 +1,6 @@
 'use client';
 
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { DraftNotification } from '@/components/tours/draft-notification';
 import { BasicInfoTab } from '@/components/tours/edit/tabs/basic-info-tab';
 import { ContentTab } from '@/components/tours/edit/tabs/content-tab';
 import { DetailsTab } from '@/components/tours/edit/tabs/details-tab';
@@ -10,15 +9,14 @@ import { ItineraryTab } from '@/components/tours/edit/tabs/itinerary-tab';
 import { PricingTab } from '@/components/tours/edit/tabs/pricing-tab';
 import { SettingsTab } from '@/components/tours/edit/tabs/settings-tab';
 import { TourImages } from '@/components/tours/edit/tabs/tour-images';
-import { Button } from '@/components/ui/button';
+import { TourFormHeader } from '@/components/tours/tour-form-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TABS } from '@/constants/UpdatTourTabs';
 import { getInitialFormData, mapFaqs, mapItinerary, mapTourToFormData } from '@/helpers/UpdatTour';
-import { useAutoSaveDraft } from '@/hooks/use-auto-save-draft';
 import { tourService } from '@/services/tour.service';
 import { Faq, ItineraryDay, Tour, UpdateTourData } from '@/types/tour.types';
 import { isAxiosError } from 'axios';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -31,8 +29,6 @@ export default function TourEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [currentTab, setCurrentTab] = useState('basic');
-  const [showDraftNotification, setShowDraftNotification] = useState(false);
-  const [draftTimestamp, setDraftTimestamp] = useState('');
 
   const [originalFormData, setOriginalFormData] = useState<UpdateTourData>(getInitialFormData());
   const [originalItinerary, setOriginalItinerary] = useState<ItineraryDay[]>([]);
@@ -44,22 +40,6 @@ export default function TourEditPage() {
   const [images, setImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [faqs, setFaqs] = useState<Faq[]>([]);
-
-  // Prepare draft data (excluding File objects)
-  const draftData = {
-    formData,
-    itinerary,
-    images, // URLs only, not File objects
-    faqs,
-    currentTab,
-  };
-
-  // Auto-save hook with unique key per tour
-  const { loadDraft, clearDraft, hasDraft } = useAutoSaveDraft({
-    key: `tour-draft-edit-${params.id}`,
-    data: draftData,
-    enabled: !isSaving && !isLoading,
-  });
 
   useEffect(() => {
     if (params.id) {
@@ -87,45 +67,11 @@ export default function TourEditPage() {
       setItinerary(mappedItinerary);
       setImages(mappedImages);
       setFaqs(mappedFaqs);
-
-      // Check for draft after loading tour data
-      setTimeout(() => {
-        if (hasDraft()) {
-          const stored = localStorage.getItem(`tour-draft-edit-${id}`);
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            setDraftTimestamp(parsed.timestamp);
-            setShowDraftNotification(true);
-          }
-        }
-      }, 100);
     } catch (error) {
       if (isAxiosError(error)) toast.error(error.response?.data.message || 'Failed to load tour');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Restore draft handler
-  const handleRestoreDraft = () => {
-    const draft = loadDraft<typeof draftData>();
-    if (draft) {
-      if (draft.formData) setFormData(draft.formData);
-      if (draft.itinerary) setItinerary(draft.itinerary);
-      if (draft.images) setImages(draft.images);
-      if (draft.faqs) setFaqs(draft.faqs);
-      if (draft.currentTab) setCurrentTab(draft.currentTab);
-
-      toast.success('Draft restored successfully!');
-    }
-    setShowDraftNotification(false);
-  };
-
-  // Discard draft handler
-  const handleDiscardDraft = () => {
-    clearDraft();
-    setShowDraftNotification(false);
-    toast.info('Draft discarded');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,9 +88,6 @@ export default function TourEditPage() {
       console.log('📤 Sending only changed fields:', changedFields);
 
       await tourService.updateTour(params.id as string, formDataToSend);
-
-      // Clear draft on successful update
-      clearDraft();
 
       toast.success('Tour updated successfully');
       setNewImageFiles([]);
@@ -239,41 +182,12 @@ export default function TourEditPage() {
     <ProtectedRoute requiredModule="Tours" requiredAction="edit">
       <div className="min-h-screen">
         <form onSubmit={handleSubmit} className="mx-auto max-w-7xl">
-          {/* Header */}
-          <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-4">
-                <Button
-                  className="cursor-pointer"
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.back()}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-bold">Edit Tour</h1>
-                  <p className="text-sm text-muted-foreground">{tour.title}</p>
-                </div>
-              </div>
-
-              <Button className="cursor-pointer" type="submit" disabled={isSaving} size="lg">
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
+          <TourFormHeader
+            title="Edit Tour"
+            subtitle={tour.title}
+            isSubmitting={isSaving}
+            submitButtonText="Save Changes"
+          />
 
           {/* Tabs */}
           <div className="p-6">

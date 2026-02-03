@@ -1,19 +1,46 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, Image as ImageIcon, Star } from 'lucide-react';
-import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Image as ImageIcon, Star, Trash2, Upload } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 interface ImagesTabProps {
-  images: File[];
-  setImages: (value: File[]) => void;
-  coverImage: File | null;
-  setCoverImage: (value: File | null) => void;
+  images: (File | string)[];
+  setImages: (value: (File | string)[]) => void;
+  coverImage: File | string | null;
+  setCoverImage: (value: File | string | null) => void;
 }
 
 export function ImagesTab({ images, setImages, coverImage, setCoverImage }: ImagesTabProps) {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
+  // Sync image previews with props
+  useEffect(() => {
+    const newPreviews = images.map((img) =>
+      typeof img === 'string' ? img : URL.createObjectURL(img)
+    );
+    setImagePreviews(newPreviews);
+
+    return () => {
+      newPreviews.forEach((url) => {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      });
+    };
+  }, [images]);
+
+  // Sync cover preview with props
+  useEffect(() => {
+    if (coverImage) {
+      const preview = typeof coverImage === 'string' ? coverImage : URL.createObjectURL(coverImage);
+      setCoverPreview(preview);
+      return () => {
+        if (preview.startsWith('blob:')) URL.revokeObjectURL(preview);
+      };
+    } else {
+      setCoverPreview(null);
+    }
+  }, [coverImage]);
 
   const handleCoverImageChange = (file: File | null) => {
     if (file) {
@@ -29,16 +56,8 @@ export function ImagesTab({ images, setImages, coverImage, setCoverImage }: Imag
         return;
       }
 
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
       setCoverImage(file);
     } else {
-      setCoverPreview(null);
       setCoverImage(null);
     }
   };
@@ -47,7 +66,6 @@ export function ImagesTab({ images, setImages, coverImage, setCoverImage }: Imag
     if (!files) return;
 
     const validFiles: File[] = [];
-    const newPreviews: string[] = [];
 
     Array.from(files).forEach((file) => {
       // Validate file type
@@ -63,16 +81,6 @@ export function ImagesTab({ images, setImages, coverImage, setCoverImage }: Imag
       }
 
       validFiles.push(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result as string);
-        if (newPreviews.length === validFiles.length) {
-          setImagePreviews([...imagePreviews, ...newPreviews]);
-        }
-      };
-      reader.readAsDataURL(file);
     });
 
     if (validFiles.length > 0) {
@@ -82,12 +90,10 @@ export function ImagesTab({ images, setImages, coverImage, setCoverImage }: Imag
 
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
-    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
   const removeCoverImage = () => {
     setCoverImage(null);
-    setCoverPreview(null);
   };
 
   return (

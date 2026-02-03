@@ -27,8 +27,8 @@ export interface TourFormData {
 
   itinerary: ItineraryDay[];
 
-  images: File[];
-  coverImage: File | null;
+  images: (File | string)[];
+  coverImage: File | string | null;
 
   bestTime: string;
   idealFor: string;
@@ -66,8 +66,8 @@ export function useTourForm() {
 
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
 
-  const [images, setImages] = useState<File[]>([]);
-  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [images, setImages] = useState<(File | string)[]>([]);
+  const [coverImage, setCoverImage] = useState<File | string | null>(null);
 
   const [bestTime, setBestTime] = useState('');
   const [idealFor, setIdealFor] = useState('');
@@ -153,6 +153,8 @@ export function useTourForm() {
     if (data.themes !== undefined) setThemes(data.themes);
     if (data.cities !== undefined) setCities(data.cities);
     if (data.faqs !== undefined) setFaqs(data.faqs);
+    if (data.images !== undefined) setImages(data.images);
+    if (data.coverImage !== undefined) setCoverImage(data.coverImage);
   };
 
   return {

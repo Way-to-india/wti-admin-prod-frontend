@@ -108,8 +108,8 @@ export interface CreateTourData {
   highlights?: string[];
   inclusions?: string[];
   exclusions?: string[];
-  images?: File[];
-  coverImage?: File;
+  images?: (File | string)[];
+  coverImage?: File | string;
   itinerary?: ItineraryDay[];
   themes?: string[];
   cities?: string[];

@@ -8,11 +8,16 @@ import { TourDraft } from '@/types/tour-draft.types';
 import { FileText, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+// ... other imports
+
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState<TourDraft[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [total, setTotal] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchDrafts = async () => {
     setIsLoading(true);
@@ -23,6 +28,7 @@ export default function DraftsPage() {
         page: 1,
         limit: 100,
         sortOrder: 'desc',
+        q: searchQuery || undefined,
       });
       setDrafts(response.drafts);
       setTotal(response.pagination.total);
@@ -34,8 +40,12 @@ export default function DraftsPage() {
   };
 
   useEffect(() => {
-    fetchDrafts();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchDrafts();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleDelete = (id: string) => {
     setDrafts(drafts.filter((draft) => draft.id !== id));
@@ -55,6 +65,15 @@ export default function DraftsPage() {
               <p className="text-sm text-muted-foreground">
                 Manage saved tour drafts ({total} total)
               </p>
+            </div>
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search drafts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
             </div>
           </div>
         </div>

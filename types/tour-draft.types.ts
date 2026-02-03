@@ -3,17 +3,17 @@ export interface TourDraft {
   adminId: string;
   adminName?: string;
   draftData: any;
-  title?: string;
+  draftName: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateTourDraftData {
   draftData: any;
-  title?: string;
+  draftName: string;
 }
 
 export interface UpdateTourDraftData {
   draftData?: any;
-  title?: string;
+  draftName?: string;
 }
